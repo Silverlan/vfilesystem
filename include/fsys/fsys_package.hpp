@@ -7,7 +7,7 @@
 
 #include "fsys_definitions.hpp"
 #include "fsys_searchflags.hpp"
-#include "vfileptr.h"
+#include <fsys/vfileptr.h>
 #include <memory>
 #include <string>
 

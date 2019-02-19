@@ -5,7 +5,7 @@
 #ifndef __DIRECTORY_WATCHER_H__
 #define __DIRECTORY_WATCHER_H__
 
-#include "filesystem.h"
+#include <fsys/filesystem.h>
 #include <string>
 #ifdef _WIN32
 #include <Windows.h>

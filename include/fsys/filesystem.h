@@ -185,7 +185,7 @@ public:
 #undef GetFileAttributes
 #undef RemoveDirectory
 
-#include "vfileptr.h"
+#include <fsys/vfileptr.h>
 #include "fsys_searchflags.hpp"
 #include <functional>
 

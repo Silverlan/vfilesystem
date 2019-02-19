@@ -5,7 +5,7 @@
 #ifndef __FILESYSTEM_STREAM_HPP__
 #define __FILESYSTEM_STREAM_HPP__
 
-#include "filesystem.h"
+#include <fsys/filesystem.h>
 #include <iostream>
 #include <array>
 
