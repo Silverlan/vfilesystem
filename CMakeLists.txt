@@ -17,10 +17,6 @@ set(LIB_TYPE SHARED)
 add_definitions(-DVFILESYSTEM_DLL)
 add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
 
-if($(MATHUTIL_ENABLE_MESH_FUNCTIONS))
-	add_definitions(-DENABLE_MESH_FUNCTIONS)
-endif()
-
 function(def_vs_filters FILE_LIST)
 	foreach(source IN LISTS FILE_LIST)
 	    get_filename_component(source_path "${source}" PATH)
