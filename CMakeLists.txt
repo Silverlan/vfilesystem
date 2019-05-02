@@ -30,6 +30,7 @@ file(GLOB_RECURSE SRC_FILES
     "${CMAKE_CURRENT_LIST_DIR}/src/*.h"
     "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp"
     "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/src/*.c"
     "${CMAKE_CURRENT_LIST_DIR}/include/*.h"
     "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"
 )

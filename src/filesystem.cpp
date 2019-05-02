@@ -27,6 +27,7 @@ extern "C" {
 #include "fsys/fsys_package.hpp"
 #include "impl_fsys_util.hpp"
 #include <array>
+#include <iostream>
 
 static unsigned long long get_file_flags(const std::string &fpath)
 {
@@ -55,9 +56,51 @@ static unsigned long long get_file_flags(const std::string &fpath)
 	return FVFILE_INVALID;
 }
 
-static unsigned long long get_file_flags(const std::string &appPath,const std::string &mountPath,const std::string &name)
+static unsigned long long update_file_insensitive_path_components_and_get_flags(std::string &appPath,std::string &mountPath,std::string &name)
 {
-	return get_file_flags((!appPath.empty() ? (appPath +"\\") : "") +mountPath +"\\" +name);
+	std::replace(appPath.begin(),appPath.end(),'\\','/');
+	std::replace(mountPath.begin(),mountPath.end(),'\\','/');
+	std::replace(name.begin(),name.end(),'\\','/');
+	ustring::replace(appPath,"//","");
+	ustring::replace(mountPath,"//","");
+	ustring::replace(name,"//","");
+
+#ifdef _WIN32
+	if(appPath.empty() == false && appPath.front() == '/')
+		appPath = appPath.substr(1);
+#endif
+	if(appPath.empty() == false && appPath.back() == '/')
+		appPath = appPath.substr(0,appPath.length() -1);
+
+	if(mountPath.empty() == false && mountPath.front() == '/')
+		mountPath = mountPath.substr(1);
+	if(mountPath.empty() == false && mountPath.back() == '/')
+		mountPath = mountPath.substr(0,mountPath.length() -1);
+
+	if(name.empty() == false && name.front() == '/')
+		name = name.substr(1);
+	if(name.empty() == false && name.back() == '/')
+		name = name.substr(0,name.length() -1);
+
+	if(appPath.empty() == false)
+	{
+		auto fullPath = appPath +"/" +mountPath +"/" +name;
+		fsys::impl::to_case_sensitive_path(fullPath);
+		auto offset = 0ull;
+		appPath = fullPath.substr(offset,appPath.length());
+		offset += appPath.length() +1;
+		mountPath = fullPath.substr(offset,mountPath.length());
+		offset += mountPath.length() +1;
+		name = fullPath.substr(offset,name.length());
+		return get_file_flags(fullPath);
+	}
+	auto fullPath = mountPath +"\\" +name;
+	fsys::impl::to_case_sensitive_path(fullPath);
+	auto offset = 0ull;
+	mountPath = fullPath.substr(offset,mountPath.length());
+	offset += mountPath.length() +1;
+	name = fullPath.substr(offset,name.length());
+	return get_file_flags(fullPath);
 }
 
 template<>
@@ -77,16 +120,7 @@ template<>
 {
 	return std::static_pointer_cast<VFilePtrInternalVirtual>(OpenFile(cpath,mode,includeFlags,excludeFlags));
 }
-/*
-template<>
-#ifdef _WIN32
-	DLLFSYSTEM
-#endif
-	VFilePtrPack FileManager::OpenFile<VFilePtrPack>(const char *cpath,const char *mode,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
-{
-	return std::static_pointer_cast<VFilePtrInternalPack>(OpenFile(cpath,mode,includeFlags,excludeFlags));
-}
-*/
+
 decltype(FileManager::m_vroot) FileManager::m_vroot;
 decltype(FileManager::m_packages) FileManager::m_packages;
 decltype(FileManager::m_customMount) FileManager::m_customMount;
@@ -318,8 +352,9 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath,const char *mode,fsy
 		std::string mountPath;
 		while(bFound == false && it.GetNextDirectory(mountPath,includeFlags,excludeFlags,bAbsolute))
 		{
-			fpath = mountPath +"\\" +path;
-			bFound = ((get_file_flags((bAbsolute == false) ? appPath : "",mountPath,path) &FVFILE_INVALID) == 0) ? true : false;
+			fpath = GetNormalizedPath(mountPath +"\\" +path);
+			auto rootPath = (bAbsolute == false) ? appPath : "";
+			bFound = ((update_file_insensitive_path_components_and_get_flags(rootPath,mountPath,path) &FVFILE_INVALID) == 0) ? true : false;
 		}
 	}
 	if(bFound == false)
@@ -407,6 +442,7 @@ static bool rename_file(const std::string &root,const std::string &file,const st
 	std::string pathNew = root +FileManager::GetCanonicalizedPath(fNewName);
 	std::replace(path.begin(),path.end(),'\\','/');
 	std::replace(pathNew.begin(),pathNew.end(),'\\','/');
+	fsys::impl::to_case_sensitive_path(path);
 	if(rename(path.c_str(),pathNew.c_str()) == 0)
 		return true;
 	return false;
@@ -425,8 +461,10 @@ bool FileManager::FindAbsolutePath(std::string path,std::string &rpath,fsys::Sea
 	auto bAbsolute = false;
 	while(it.GetNextDirectory(mountPath,includeFlags,excludeFlags,bAbsolute))
 	{
-		auto fpath = mountPath +"\\" +path;
-		if((get_file_flags(bAbsolute ? "" : appPath,mountPath,path) &FVFILE_INVALID) == 0)
+		auto fpath = GetNormalizedPath(mountPath +"\\" +path);
+		fsys::impl::to_case_sensitive_path(fpath);
+		auto rootPath = bAbsolute ? "" : appPath;
+		if((update_file_insensitive_path_components_and_get_flags(rootPath,mountPath,path) &FVFILE_INVALID) == 0)
 		{
 			rpath = fpath;
 			if(bAbsolute == false)
@@ -448,8 +486,8 @@ bool FileManager::FindLocalPath(std::string path,std::string &rpath,fsys::Search
 	{
 		if(bAbsolute == true)
 			continue;
-		auto fpath = mountPath +"\\" +path;
-		if((get_file_flags(appPath,mountPath,path) &FVFILE_INVALID) == 0)
+		auto fpath = GetNormalizedPath(mountPath +"\\" +path);
+		if((update_file_insensitive_path_components_and_get_flags(appPath,mountPath,path) &FVFILE_INVALID) == 0)
 		{
 			rpath = fpath;
 			return true;
@@ -710,6 +748,7 @@ DLLFSYSTEM std::string FileManager::GetCanonicalizedPath(std::string path)
 	if(path.empty())
 		return path;
 	std::replace(path.begin(),path.end(),'/','\\');
+	ustring::replace(path,"\\\\","");
 #ifdef __linux__
 	std::string spathReal = normalizePath(path);
 #else
@@ -905,7 +944,8 @@ DLLFSYSTEM bool FileManager::Exists(std::string name,fsys::SearchFlags includeFl
 	bool bAbsolute = false;
 	while(it.GetNextDirectory(mountPath,includeFlags,excludeFlags,bAbsolute))
 	{
-		if((get_file_flags((bAbsolute == false) ? appPath : "",mountPath,name) &FVFILE_INVALID) == 0)
+		auto rootPath = (bAbsolute == false) ? appPath : "";
+		if((update_file_insensitive_path_components_and_get_flags(rootPath,mountPath,name) &FVFILE_INVALID) == 0)
 			return true;
 	}
 	return false;
@@ -974,7 +1014,8 @@ DLLFSYSTEM unsigned long long FileManager::GetFileFlags(std::string name,fsys::S
 	bool bAbsolute = false;
 	while(it.GetNextDirectory(mountPath,includeFlags,excludeFlags,bAbsolute))
 	{
-		auto flags = get_file_flags((bAbsolute == false) ? appPath : "",mountPath,name);
+		auto rootPath = (bAbsolute == false) ? appPath : "";
+		auto flags = update_file_insensitive_path_components_and_get_flags(rootPath,mountPath,name);
 		if(flags != FVFILE_INVALID)
 			return flags;
 	}
@@ -994,14 +1035,20 @@ DLLFSYSTEM bool FileManager::IsDir(std::string name,fsys::SearchFlags fsearchmod
 
 bool FileManager::ExistsSystem(std::string name)
 {
+	name = GetNormalizedPath(name);
+	fsys::impl::to_case_sensitive_path(name);
 	return (get_file_flags(name) &FVFILE_INVALID) == 0;
 }
 bool FileManager::IsSystemFile(std::string name)
 {
+	name = GetNormalizedPath(name);
+	fsys::impl::to_case_sensitive_path(name);
 	return (get_file_flags(name) &FVFILE_DIRECTORY) == 0;
 }
 bool FileManager::IsSystemDir(std::string name)
 {
+	name = GetNormalizedPath(name);
+	fsys::impl::to_case_sensitive_path(name);
 	return (get_file_flags(name) &FVFILE_DIRECTORY) == FVFILE_DIRECTORY;
 }
 

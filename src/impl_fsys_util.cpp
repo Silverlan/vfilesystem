@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "impl_fsys_util.hpp"
+#include "fcaseopen.h"
 
 bool fsys::impl::has_value(std::vector<std::string> *values,size_t start,size_t end,std::string val,bool bKeepCase)
 {
@@ -17,4 +18,15 @@ bool fsys::impl::has_value(std::vector<std::string> *values,size_t start,size_t 
 			return true;
 	}
 	return false;
+}
+
+void fsys::impl::to_case_sensitive_path(std::string &inOutCaseInsensitivePath)
+{
+#ifdef __linux__
+	if(inOutCaseInsensitivePath.empty())
+		return;
+	char *r = static_cast<char*>(alloca(inOutCaseInsensitivePath.length() + 2));
+	if (casepath(inOutCaseInsensitivePath.c_str(), r))
+		inOutCaseInsensitivePath = r;
+#endif
 }

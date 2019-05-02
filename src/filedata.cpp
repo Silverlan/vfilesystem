@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "fsys/filesystem.h"
+#include "fcaseopen.h"
 #include <cstring>
 
 VData::VData(std::string name)
@@ -399,11 +400,7 @@ bool VFilePtrInternalReal::Construct(const char *path,const char *mode)
 {
 	std::string sPath = path;
 	std::replace(sPath.begin(),sPath.end(),'\\','/');
-#ifdef _WIN32
-	fopen_s(&m_file,sPath.c_str(),mode);
-#else
-	m_file = fopen(sPath.c_str(),mode);
-#endif
+	m_file = fcaseopen(sPath.c_str(),mode);
 	if(m_file == NULL)
 		return false;
 	m_path = sPath.c_str();
