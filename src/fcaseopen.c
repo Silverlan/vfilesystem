@@ -95,7 +95,7 @@ FILE *fcaseopen(char const *path, char const *mode)
         }
     }
 #else
-    FILE *f = nullptr;
+    FILE *f = NULL;
     fopen_s(&f,path,mode);
 #endif
     return f;
@@ -114,7 +114,7 @@ FILE *fcasereopen(FILE **f,char const *path, char const *mode)
         }
     }
 #else
-    FILE *f = nullptr;
+    f = NULL;
     freopen_s(f,path,mode,*f);
 #endif
     return f;
