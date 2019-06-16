@@ -148,7 +148,8 @@ public:
 	virtual ~VFilePtrInternalVirtual() override;
 	size_t Read(void *ptr,size_t size);
 	unsigned long long Tell();
-	void Seek(unsigned long long offset);
+	virtual void Seek(unsigned long long offset) override;
+	using VFilePtrInternal::Seek;
 	int Eof();
 	int ReadChar();
 	unsigned long long GetSize();
@@ -170,7 +171,8 @@ public:
 	size_t Read(void *ptr,size_t size);
 	size_t Write(const void *ptr,size_t size);
 	unsigned long long Tell();
-	void Seek(unsigned long long offset);
+	virtual void Seek(unsigned long long offset) override;
+	using VFilePtrInternal::Seek;
 	int Eof();
 	int ReadChar();
 	unsigned long long GetSize();
@@ -249,6 +251,7 @@ public:
 	static void FindFiles(const char *cfind,std::vector<std::string> *resfiles,std::vector<std::string> *resdirs,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
 	static void FindSystemFiles(const char *path,std::vector<std::string> *resfiles,std::vector<std::string> *resdirs,bool bKeepPath=false);
 	static bool CopyFile(const char *cfile,const char *cfNewPath);
+	static bool CopySystemFile(const char *cfile,const char *cfNewPath);
 	static bool MoveFile(const char *cfile,const char *cfNewPath);
 	static void SetAbsoluteRootPath(const std::string &path);
 	static void SetRootPath(const std::string &path);

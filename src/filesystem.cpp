@@ -1052,7 +1052,34 @@ bool FileManager::IsSystemDir(std::string name)
 	return (get_file_flags(name) &FVFILE_DIRECTORY) == FVFILE_DIRECTORY;
 }
 
-DLLFSYSTEM bool FileManager::CopyFile(const char *cfile,const char *cfNewPath)
+bool FileManager::CopySystemFile(const char *cfile,const char *cfNewPath)
+{
+	std::string file = GetCanonicalizedPath(cfile);
+	auto src = OpenSystemFile(file.c_str(),"rb");
+	if(src == NULL)
+		return false;
+	std::string fNewPath = GetCanonicalizedPath(cfNewPath);
+	auto tgt = OpenSystemFile(fNewPath.c_str(),"wb");
+	if(tgt == NULL)
+		return false;
+	unsigned long long size = src->GetSize();
+	char *data = (size > 32768) ? (new char[32768]) : (new char[size]);
+	while(size > 32768)
+	{
+		src->Read(&data[0],32768);
+		tgt->Write(&data[0],32768);
+		size -= 32768;
+	}
+	if(size > 0)
+	{
+		src->Read(&data[0],size);
+		tgt->Write(&data[0],size);
+	}
+	delete[] data;
+	return true;
+}
+
+bool FileManager::CopyFile(const char *cfile,const char *cfNewPath)
 {
 	std::string file = GetCanonicalizedPath(cfile);
 	auto src = OpenFile(file.c_str(),"rb");
