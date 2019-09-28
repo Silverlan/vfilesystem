@@ -239,7 +239,7 @@ DLLFSYSTEM bool FileManager::IsWriteMode(const char *mode)
 	unsigned int c = 0;
 	while(mode[c] != '\0')
 	{
-		if(mode[c] == 'w' || mode[c] == 'W' || mode[c] == 'a' || mode[c] == 'A')
+		if(mode[c] == 'w' || mode[c] == 'W' || mode[c] == 'a' || mode[c] == 'A' || mode[c] == '+')
 			return true;
 		c++;
 	}
