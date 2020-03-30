@@ -23,6 +23,7 @@ extern "C" {
 #include <cstring>
 #include <sharedutils/util_string.h>
 #include <sharedutils/util.h>
+#include <sharedutils/util_path.hpp>
 #include "fsys/fsys_searchflags.hpp"
 #include "fsys/fsys_package.hpp"
 #include "impl_fsys_util.hpp"
@@ -745,21 +746,9 @@ static std::string normalizePath(std::string &path)
 
 DLLFSYSTEM std::string FileManager::GetCanonicalizedPath(std::string path)
 {
-	if(path.empty())
-		return path;
+	util::canonicalize_path(path);
 	std::replace(path.begin(),path.end(),'/','\\');
-	ustring::replace(path,"\\\\","");
-#ifdef __linux__
-	std::string spathReal = normalizePath(path);
-#else
-	const char *buf = path.c_str();
-	char pathReal[MAX_PATH];
-	PathCanonicalize(pathReal,buf);
-	std::string spathReal = pathReal;
-	if(!spathReal.empty() && spathReal[0] == '\\')
-		spathReal = spathReal.substr(1,spathReal.size());
-#endif
-	return spathReal;
+	return path;
 }
 
 DLLFSYSTEM std::string FileManager::GetSubPath(const std::string &root,std::string path)
