@@ -30,6 +30,7 @@ extern "C" {
 #include <array>
 #include <iostream>
 
+#pragma optimize("",off)
 static unsigned long long get_file_flags(const std::string &fpath)
 {
 #ifdef __linux__
@@ -1276,3 +1277,4 @@ int VFilePtrInternalVirtual::ReadChar()
 	m_offset++;
 	return c;
 }
+#pragma optimize("",on)

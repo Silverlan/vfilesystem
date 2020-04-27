@@ -12,9 +12,13 @@ DirectoryWatcher::FileEvent::FileEvent(const std::string &fName)
 DirectoryWatcher::DirectoryWatcher(const std::string &path,WatchFlags flags)
 	: m_bRunning(true)
 {
+	if(umath::is_flag_set(flags,WatchFlags::StartDisabled))
+		SetEnabled(false);
 	auto dstPath = FileManager::GetCanonicalizedPath(((flags &WatchFlags::AbsolutePath) != WatchFlags::None) ? path : (FileManager::GetProgramPath() +'\\' +FileManager::GetNormalizedPath(path)));
 #ifdef _WIN32
 	auto notifyFilter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_SIZE;
+	if(umath::is_flag_set(flags,WatchFlags::WatchDirectoryChanges))
+		notifyFilter |= FILE_NOTIFY_CHANGE_DIR_NAME;
 
 	auto hDir = std::make_shared<HANDLE>(CreateFile(
 		dstPath.c_str(),
@@ -73,15 +77,18 @@ DirectoryWatcher::DirectoryWatcher(const std::string &path,WatchFlags flags)
 						assert(pInfo->Action == FILE_ACTION_RENAMED_NEW_NAME);
 					}
 
-					std::wstring wstr = pInfo->FileName;
-					std::string str(wstr.begin(),wstr.begin() +(pInfo->FileNameLength /sizeof(FILE_NOTIFY_INFORMATION::FileName[0])));
-					m_fileMutex.lock();
-						auto it = std::find_if(m_fileStack.begin(),m_fileStack.end(),[&str](const FileEvent &ev) {
-							return (ev.fileName == str) ? true : false;
-						});
-						if(it == m_fileStack.end())
-							m_fileStack.push_back({str});
-					m_fileMutex.unlock();
+					if(m_enabled)
+					{
+						std::wstring wstr = pInfo->FileName;
+						std::string str(wstr.begin(),wstr.begin() +(pInfo->FileNameLength /sizeof(FILE_NOTIFY_INFORMATION::FileName[0])));
+						m_fileMutex.lock();
+							auto it = std::find_if(m_fileStack.begin(),m_fileStack.end(),[&str](const FileEvent &ev) {
+								return (ev.fileName == str) ? true : false;
+							});
+							if(it == m_fileStack.end())
+								m_fileStack.push_back({str});
+						m_fileMutex.unlock();
+					}
 					break;
 				}
 				case WAIT_OBJECT_0 +1: // Exit Event
@@ -108,6 +115,9 @@ DirectoryWatcher::~DirectoryWatcher()
 #endif
 	m_thread.join();
 }
+
+void DirectoryWatcher::SetEnabled(bool enabled) {m_enabled = enabled;}
+bool DirectoryWatcher::IsEnabled() const {return m_enabled;}
 
 void DirectoryWatcher::Poll()
 {

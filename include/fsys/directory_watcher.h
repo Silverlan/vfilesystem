@@ -32,17 +32,23 @@ public:
 	{
 		None = 0u,
 		WatchSubDirectories = 1u,
-		AbsolutePath = WatchSubDirectories<<1u
+		AbsolutePath = WatchSubDirectories<<1u,
+		StartDisabled = AbsolutePath<<1u,
+		WatchDirectoryChanges = StartDisabled<<1u
 	};
 
 	DirectoryWatcher(const std::string &path,WatchFlags flags=WatchFlags::None);
 	virtual ~DirectoryWatcher();
 	void Poll();
+
+	void SetEnabled(bool enabled);
+	bool IsEnabled() const;
 protected:
 	virtual void OnFileModified(const std::string &fName)=0;
 private:
 	std::thread m_thread;
 	std::atomic<bool> m_bRunning;
+	std::atomic<bool> m_enabled = true;
 	struct FileEvent
 	{
 		FileEvent(const std::string &fName);
