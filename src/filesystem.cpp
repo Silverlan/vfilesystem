@@ -28,6 +28,7 @@ extern "C" {
 #include "fsys/fsys_package.hpp"
 #include "impl_fsys_util.hpp"
 #include <array>
+#include <mutex>
 #include <iostream>
 
 #pragma optimize("",off)
@@ -129,6 +130,10 @@ decltype(FileManager::m_customMount) FileManager::m_customMount;
 decltype(FileManager::m_rootPath) FileManager::m_rootPath;
 decltype(FileManager::m_customFileHandler) FileManager::m_customFileHandler = nullptr;
 
+static std::mutex g_customMountMutex {};
+static std::mutex g_packageMutex {};
+static std::mutex g_rootPathMutex {};
+
 void FileManager::SetCustomFileHandler(const std::function<VFilePtr(const std::string&,const char *mode)> &fHandler) {m_customFileHandler = fHandler;}
 
 DLLFSYSTEM std::string FileManager::GetNormalizedPath(std::string path)
@@ -145,6 +150,7 @@ DLLFSYSTEM std::string FileManager::GetProgramPath() {return util::get_program_p
 void FileManager::RemoveCustomMountDirectory(const char *cpath)
 {
 	auto path = GetCanonicalizedPath(cpath);
+	std::unique_lock lock {g_customMountMutex};
 	auto it = std::find_if(m_customMount.begin(),m_customMount.end(),[&path](const MountDirectory &mount) {
 		return (mount.directory == path) ? true : false;
 	});
@@ -165,6 +171,7 @@ void FileManager::AddCustomMountDirectory(const char *cpath,bool bAbsolutePath,f
 	searchMode &= ~fsys::SearchFlags::Virtual;
 	searchMode &= ~fsys::SearchFlags::Package;
 	auto path = GetCanonicalizedPath(cpath);
+	std::unique_lock lock {g_customMountMutex};
 	for(auto it=m_customMount.begin();it!=m_customMount.end();++it)
 	{
 		auto &mount = *it;
@@ -179,6 +186,7 @@ void FileManager::AddCustomMountDirectory(const char *cpath,bool bAbsolutePath,f
 
 DLLFSYSTEM void FileManager::ClearCustomMountDirectories()
 {
+	std::unique_lock lock {g_customMountMutex};
 	m_customMount.clear();
 }
 
@@ -213,12 +221,14 @@ DLLFSYSTEM std::pair<VDirectory*,VFile*> FileManager::AddVirtualFile(std::string
 DLLFSYSTEM VDirectory *FileManager::GetRootDirectory() {return &m_vroot;}
 DLLFSYSTEM std::string FileManager::GetRootPath()
 {
+	std::unique_lock lock {g_rootPathMutex};
 	if(m_rootPath == nullptr)
 		return GetProgramPath();
 	return *m_rootPath.get();
 }
 DLLFSYSTEM void FileManager::SetAbsoluteRootPath(const std::string &path)
 {
+	std::unique_lock lock {g_rootPathMutex};
 	m_rootPath = nullptr;
 	if(!path.empty())
 	{
@@ -278,6 +288,7 @@ VFilePtr FileManager::OpenPackageFile(const char *packageName,const char *cpath,
 	bool bWrite = IsWriteMode(mode);
 	if(bWrite == true)
 		return nullptr;
+	std::unique_lock lock {g_packageMutex};
 	auto it = m_packages.find(packageName);
 	if(it == m_packages.end())
 		return nullptr;
@@ -286,6 +297,7 @@ VFilePtr FileManager::OpenPackageFile(const char *packageName,const char *cpath,
 
 fsys::PackageManager *FileManager::GetPackageManager(const std::string &name)
 {
+	std::unique_lock lock {g_packageMutex};
 	auto it = m_packages.find(name);
 	if(it == m_packages.end())
 		return nullptr;
@@ -335,6 +347,7 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath,const char *mode,fsy
 	}
 	if((includeFlags &fsys::SearchFlags::Package) == fsys::SearchFlags::Package)
 	{
+		std::unique_lock lock {g_packageMutex};
 		for(auto &pair : m_packages)
 		{
 			pfile = pair.second->OpenFile(path,bBinary,includeFlags,excludeFlags);
@@ -350,6 +363,7 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath,const char *mode,fsy
 	bool bAbsolute = false;
 	if((includeFlags &fsys::SearchFlags::NoMounts) == fsys::SearchFlags::None)
 	{
+		std::unique_lock lock {g_customMountMutex};
 		MountIterator it(m_customMount);
 		std::string mountPath;
 		while(bFound == false && it.GetNextDirectory(mountPath,includeFlags,excludeFlags,bAbsolute))
@@ -374,6 +388,7 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath,const char *mode,fsy
 
 fsys::Package *FileManager::LoadPackage(std::string package,fsys::SearchFlags searchMode)
 {
+	std::unique_lock lock {g_packageMutex};
 	for(auto &pair : m_packages)
 	{
 		auto *pck = pair.second->LoadPackage(package,searchMode);
@@ -385,12 +400,14 @@ fsys::Package *FileManager::LoadPackage(std::string package,fsys::SearchFlags se
 
 void FileManager::ClearPackages(fsys::SearchFlags searchMode)
 {
+	std::unique_lock lock {g_packageMutex};
 	for(auto &pair : m_packages)
 		pair.second->ClearPackages(searchMode);
 }
 
 void FileManager::RegisterPackageManager(const std::string &name,std::unique_ptr<fsys::PackageManager> pm)
 {
+	std::unique_lock lock {g_packageMutex};
 	m_packages.insert(std::make_pair(name,std::move(pm)));
 }
 
@@ -457,6 +474,7 @@ DLLFSYSTEM bool FileManager::RenameFile(const char *file,const char *fNewName) {
 bool FileManager::FindAbsolutePath(std::string path,std::string &rpath,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
 {
 	NormalizePath(path);
+	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	std::string appPath = GetRootPath() +"\\";
@@ -480,6 +498,7 @@ bool FileManager::FindAbsolutePath(std::string path,std::string &rpath,fsys::Sea
 bool FileManager::FindLocalPath(std::string path,std::string &rpath,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
 {
 	NormalizePath(path);
+	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	std::string appPath = GetRootPath() +"\\";
@@ -644,6 +663,7 @@ DLLFSYSTEM void FileManager::FindFiles(const char *cfind,std::vector<std::string
 	}
 	if((includeFlags &fsys::SearchFlags::Package) == fsys::SearchFlags::Package)
 	{
+		std::unique_lock lock {g_packageMutex};
 		for(auto &pair : m_packages)
 			pair.second->FindFiles(cfind,path,resfiles,resdirs,bKeepPath,includeFlags);
 	}
@@ -651,6 +671,7 @@ DLLFSYSTEM void FileManager::FindFiles(const char *cfind,std::vector<std::string
 		return;
 	std::string localPath = path;
 	std::string appPath = GetRootPath();
+	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	bool bAbsolute = false;
@@ -824,6 +845,7 @@ DLLFSYSTEM bool FileManager::CreateDirectory(const char *dir)
 
 DLLFSYSTEM void FileManager::Close()
 {
+	std::unique_lock lock {g_packageMutex};
 	m_packages.clear();
 }
 
@@ -884,6 +906,7 @@ DLLFSYSTEM unsigned long long FileManager::GetFileSize(std::string name,fsys::Se
 	}
 	if((fsearchmode &fsys::SearchFlags::Package) == fsys::SearchFlags::Package)
 	{
+		std::unique_lock lock {g_packageMutex};
 		uint64_t size = 0;
 		for(auto &pair : m_packages)
 		{
@@ -920,6 +943,7 @@ DLLFSYSTEM bool FileManager::Exists(std::string name,fsys::SearchFlags includeFl
 		return true;
 	if((includeFlags &fsys::SearchFlags::Package) == fsys::SearchFlags::Package)
 	{
+		std::unique_lock lock {g_packageMutex};
 		for(auto &pair : m_packages)
 		{
 			if(pair.second->Exists(name,includeFlags) == true)
@@ -929,6 +953,7 @@ DLLFSYSTEM bool FileManager::Exists(std::string name,fsys::SearchFlags includeFl
 	if((includeFlags &fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return false;
 	std::string appPath = GetRootPath();
+	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	bool bAbsolute = false;
@@ -946,6 +971,7 @@ DLLFSYSTEM unsigned long long FileManager::GetFileAttributes(std::string name)
 {
 	NormalizePath(name);
 	std::string appPath = GetRootPath() +"\\";
+	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	bool bAbsolute = false;
@@ -989,6 +1015,7 @@ DLLFSYSTEM unsigned long long FileManager::GetFileFlags(std::string name,fsys::S
 	}
 	if((includeFlags &fsys::SearchFlags::Package) == fsys::SearchFlags::Package)
 	{
+		std::unique_lock lock {g_packageMutex};
 		uint64_t flags = 0;
 		for(auto &pair : m_packages)
 		{
@@ -999,6 +1026,7 @@ DLLFSYSTEM unsigned long long FileManager::GetFileFlags(std::string name,fsys::S
 	if((includeFlags &fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return FVFILE_INVALID;
 	std::string appPath = GetRootPath() +"\\";
+	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	bool bAbsolute = false;

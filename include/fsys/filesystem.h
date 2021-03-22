@@ -190,9 +190,83 @@ public:
 #include <fsys/vfileptr.h>
 #include "fsys_searchflags.hpp"
 #include <functional>
+#include <string_view>
 
 struct MountDirectory;
 namespace fsys {class PackageManager; class Package;};
+namespace filemanager
+{
+	enum class FileMode : uint8_t
+	{
+		Binary = 1,
+		Read = Binary<<1u,
+		Write = Read<<1u,
+		Append = Write<<1u
+	};
+	DLLFSYSTEM VFilePtr open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+
+	template<class T>
+		T open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+	
+	DLLFSYSTEM std::string get_program_path();
+	DLLFSYSTEM void add_custom_mount_directory(const std::string_view &cpath,fsys::SearchFlags searchMode=fsys::SearchFlags::Local);
+	DLLFSYSTEM void add_custom_mount_directory(const std::string_view &cpath,bool bAbsolutePath,fsys::SearchFlags searchMode=fsys::SearchFlags::Local);
+	DLLFSYSTEM void remove_custom_mount_directory(const std::string_view &path);
+	DLLFSYSTEM void clear_custom_mount_directories();
+	DLLFSYSTEM VFilePtrReal open_system_file(const std::string_view &cpath,FileMode mode);
+	DLLFSYSTEM bool create_path(const std::string_view &path);
+	DLLFSYSTEM bool create_directory(const std::string_view &dir);
+	DLLFSYSTEM std::pair<VDirectory*,VFile*> add_virtual_file(const std::string_view &path,const std::shared_ptr<std::vector<uint8_t>> &data);
+	DLLFSYSTEM VDirectory *get_root_directory();
+	DLLFSYSTEM fsys::Package *load_package(const std::string_view &package,fsys::SearchFlags searchMode=fsys::SearchFlags::Local);
+	DLLFSYSTEM void clear_packages(fsys::SearchFlags searchMode);
+	DLLFSYSTEM void register_packet_manager(const std::string_view &name,std::unique_ptr<fsys::PackageManager> pm);
+
+	DLLFSYSTEM bool remove_file(const std::string_view &file);
+	DLLFSYSTEM bool remove_directory(const std::string_view &dir);
+	DLLFSYSTEM bool rename_file(const std::string_view &file,const std::string_view &fNewName);
+	DLLFSYSTEM void close();
+	DLLFSYSTEM std::string get_path(const std::string_view &path);
+	DLLFSYSTEM std::string get_file(const std::string_view &path);
+	DLLFSYSTEM std::string get_canonicalized_path(const std::string_view &path);
+	DLLFSYSTEM std::string get_sub_path(const std::string_view &path);
+	DLLFSYSTEM unsigned long long get_file_size(const std::string_view &name,fsys::SearchFlags fsearchmode=fsys::SearchFlags::All);
+	DLLFSYSTEM bool exists(const std::string_view &name,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+	DLLFSYSTEM bool is_file(const std::string_view &name,fsys::SearchFlags fsearchmode=fsys::SearchFlags::All);
+	DLLFSYSTEM bool is_dir(const std::string_view &name,fsys::SearchFlags fsearchmode=fsys::SearchFlags::All);
+	DLLFSYSTEM bool exists_system(const std::string_view &name);
+	DLLFSYSTEM bool is_system_file(const std::string_view &name);
+	DLLFSYSTEM bool is_system_dir(const std::string_view &name);
+	DLLFSYSTEM unsigned long long get_file_attributes(const std::string_view &name);
+	DLLFSYSTEM unsigned long long get_file_flags(const std::string_view &name,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+	DLLFSYSTEM std::string get_normalized_path(const std::string_view &path);
+	DLLFSYSTEM void find_files(const std::string_view &cfind,std::vector<std::string> *resfiles,std::vector<std::string> *resdirs,bool bKeepPath,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+	DLLFSYSTEM void find_files(const std::string_view &cfind,std::vector<std::string> *resfiles,std::vector<std::string> *resdirs,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+	DLLFSYSTEM void find_system_files(const std::string_view &path,std::vector<std::string> *resfiles,std::vector<std::string> *resdirs,bool bKeepPath=false);
+	DLLFSYSTEM bool copy_file(const std::string_view &cfile,const std::string_view &cfNewPath);
+	DLLFSYSTEM bool copy_system_file(const std::string_view &cfile,const std::string_view &cfNewPath);
+	DLLFSYSTEM bool move_file(const std::string_view &cfile,const std::string_view &cfNewPath);
+	DLLFSYSTEM void set_absolute_root_path(const std::string_view &path);
+	DLLFSYSTEM void set_root_path(const std::string_view &path);
+	DLLFSYSTEM std::string get_root_path();
+
+	DLLFSYSTEM bool find_local_path(const std::string_view &path,const std::string_view &rpath,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+	DLLFSYSTEM bool find_absolute_path(const std::string_view &path,const std::string_view &rpath,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+	DLLFSYSTEM char get_directory_separator();
+	DLLFSYSTEM bool remove_system_file(const std::string_view &file);
+	DLLFSYSTEM bool remove_system_directory(const std::string_view &dir);
+	DLLFSYSTEM bool rename_system_file(const std::string_view &file,const std::string_view &fNewName);
+	DLLFSYSTEM std::string get_sub_path(const std::string_view &root,const std::string_view &path);
+	DLLFSYSTEM bool create_system_path(const std::string_view &root,const std::string_view &path);
+	DLLFSYSTEM bool create_system_directory(const std::string_view &dir);
+
+	DLLFSYSTEM VFilePtr open_package_file(const std::string_view &packageName,const std::string_view &cpath,FileMode mode,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+	DLLFSYSTEM fsys::PackageManager *get_package_manager(const std::string_view &name);
+
+	DLLFSYSTEM bool compare_path(const std::string_view &a,const std::string_view &b);
+};
+REGISTER_BASIC_BITWISE_OPERATORS(filemanager::FileMode)
+
 class DLLFSYSTEM FileManager
 {
 private:
