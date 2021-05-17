@@ -39,7 +39,7 @@ public:
 
 	DirectoryWatcher(const std::string &path,WatchFlags flags=WatchFlags::None);
 	virtual ~DirectoryWatcher();
-	void Poll();
+	uint32_t Poll();
 
 	void SetEnabled(bool enabled);
 	bool IsEnabled() const;

@@ -119,8 +119,9 @@ DirectoryWatcher::~DirectoryWatcher()
 void DirectoryWatcher::SetEnabled(bool enabled) {m_enabled = enabled;}
 bool DirectoryWatcher::IsEnabled() const {return m_enabled;}
 
-void DirectoryWatcher::Poll()
+uint32_t DirectoryWatcher::Poll()
 {
+	uint32_t numChanged = 0;
 #ifdef _WIN32
 	m_fileMutex.lock();
 		if(!m_fileStack.empty())
@@ -132,6 +133,7 @@ void DirectoryWatcher::Poll()
 				auto tDelta = std::chrono::duration_cast<std::chrono::milliseconds>(t -f.time).count();
 				if(tDelta > 100) // Wait for a tenth of a second before relaying the event
 				{
+					++numChanged;
 					OnFileModified(f.fileName);
 					it = m_fileStack.erase(it);
 				}
@@ -141,6 +143,7 @@ void DirectoryWatcher::Poll()
 		}
 	m_fileMutex.unlock();
 #endif
+	return numChanged;
 }
 
 ///////////////////////
