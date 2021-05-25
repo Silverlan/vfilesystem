@@ -40,6 +40,7 @@ public:
 	DirectoryWatcher(const std::string &path,WatchFlags flags=WatchFlags::None);
 	virtual ~DirectoryWatcher();
 	uint32_t Poll();
+	const std::string &GetPath() const {return m_path;}
 
 	void SetEnabled(bool enabled);
 	bool IsEnabled() const;
@@ -49,6 +50,7 @@ private:
 	std::thread m_thread;
 	std::atomic<bool> m_bRunning;
 	std::atomic<bool> m_enabled = true;
+	std::string m_path;
 	struct FileEvent
 	{
 		FileEvent(const std::string &fName);
@@ -72,5 +74,6 @@ protected:
 public:
 	DirectoryWatcherCallback(const std::string &path,const std::function<void(const std::string&)> &onFileModified,WatchFlags flags=WatchFlags::None);
 };
+DLLFSYSTEM std::ostream &operator<<(std::ostream &out,const DirectoryWatcherCallback &o);
 
 #endif

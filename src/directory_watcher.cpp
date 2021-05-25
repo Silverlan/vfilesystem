@@ -156,3 +156,9 @@ void DirectoryWatcherCallback::OnFileModified(const std::string &fName)
 {
 	m_onFileModified(fName);
 }
+
+std::ostream &operator<<(std::ostream &out,const DirectoryWatcherCallback &o)
+{
+	out<<"DirectoryListener["<<o.GetPath()<<"]";
+	return out;
+}
