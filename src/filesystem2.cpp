@@ -27,6 +27,7 @@ extern "C" {
 #include "fsys/fsys_searchflags.hpp"
 #include "fsys/fsys_package.hpp"
 #include "impl_fsys_util.hpp"
+#include <filesystem>
 #include <array>
 #include <iostream>
 
@@ -71,7 +72,21 @@ void filemanager::clear_packages(fsys::SearchFlags searchMode) {FileManager::Cle
 void filemanager::register_packet_manager(const std::string_view &name,std::unique_ptr<fsys::PackageManager> pm) {FileManager::RegisterPackageManager(std::string{name},std::move(pm));}
 
 bool filemanager::remove_file(const std::string_view &file) {return FileManager::RemoveFile(file.data());}
-bool filemanager::remove_directory(const std::string_view &dir) {return FileManager::RemoveDirectory(dir.data());}
+bool filemanager::remove_directory(const std::string_view &dir)
+{
+	auto absPath = FileManager::GetRootPath() +'\\' +std::string{dir};
+	if(std::filesystem::is_directory(absPath) == false)
+		return false;
+	try
+	{
+		return std::filesystem::remove_all(absPath);
+	}
+	catch(const std::filesystem::filesystem_error &err)
+	{
+		return false;
+	}
+	return false;
+}
 bool filemanager::rename_file(const std::string_view &file,const std::string_view &fNewName) {return FileManager::RenameFile(file.data(),fNewName.data());}
 void filemanager::close() {return FileManager::Close();}
 std::string filemanager::get_path(const std::string_view &path) {return FileManager::GetPath(std::string{path});}
