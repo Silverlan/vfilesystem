@@ -7,6 +7,7 @@
 #include "fsys_shared.h"
 #include "fsys_definitions.hpp"
 #include <mathutil/umath.h>
+#include <optional>
 #include <memory>
 
 #pragma warning(push)
@@ -204,6 +205,8 @@ namespace filemanager
 		Append = Write<<1u
 	};
 	DLLFSYSTEM VFilePtr open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+	DLLFSYSTEM bool write_file(const std::string_view &path,const std::string_view &contents);
+	DLLFSYSTEM std::optional<std::string> read_file(const std::string_view &path);
 
 	template<class T>
 		T open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
@@ -266,6 +269,12 @@ namespace filemanager
 	DLLFSYSTEM bool compare_path(const std::string_view &a,const std::string_view &b);
 };
 REGISTER_BASIC_BITWISE_OPERATORS(filemanager::FileMode)
+
+template<class T>
+	T filemanager::open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
+{
+	return FileManager::OpenFile<T>(path.data(),to_string_mode(mode).c_str(),includeFlags,excludeFlags);
+}
 
 class DLLFSYSTEM FileManager
 {

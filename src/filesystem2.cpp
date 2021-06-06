@@ -54,6 +54,22 @@ VFilePtr filemanager::open_file(const std::string_view &path,FileMode mode,fsys:
 	return FileManager::OpenFile(path.data(),to_string_mode(mode).c_str(),includeFlags,excludeFlags);
 }
 
+bool filemanager::write_file(const std::string_view &path,const std::string_view &contents)
+{
+	auto f = open_file<VFilePtrReal>(path,filemanager::FileMode::Write);
+	if(!f)
+		return false;
+	f->WriteString(contents.data());
+	return true;
+}
+std::optional<std::string> filemanager::read_file(const std::string_view &path)
+{
+	auto f = open_file(path,filemanager::FileMode::Read);
+	if(!f)
+		return {};
+	return f->ReadString();
+}
+
 template<class T>
 	T filemanager::open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags);
 	
