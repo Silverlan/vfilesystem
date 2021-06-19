@@ -31,7 +31,7 @@ extern "C" {
 #include <array>
 #include <iostream>
 
-static std::string to_string_mode(filemanager::FileMode mode)
+std::string filemanager::detail::to_string_mode(filemanager::FileMode mode)
 {
 	std::string strMode;
 	if(umath::is_flag_set(mode,filemanager::FileMode::Read | filemanager::FileMode::Write))
@@ -51,7 +51,7 @@ static std::string to_string_mode(filemanager::FileMode mode)
 
 VFilePtr filemanager::open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
 {
-	return FileManager::OpenFile(path.data(),to_string_mode(mode).c_str(),includeFlags,excludeFlags);
+	return FileManager::OpenFile(path.data(),detail::to_string_mode(mode).c_str(),includeFlags,excludeFlags);
 }
 
 bool filemanager::write_file(const std::string_view &path,const std::string_view &contents)
@@ -78,7 +78,7 @@ void filemanager::add_custom_mount_directory(const std::string_view &cpath,fsys:
 void filemanager::add_custom_mount_directory(const std::string_view &cpath,bool bAbsolutePath,fsys::SearchFlags searchMode) {FileManager::AddCustomMountDirectory(cpath.data(),bAbsolutePath,searchMode);}
 void filemanager::remove_custom_mount_directory(const std::string_view &path) {FileManager::RemoveCustomMountDirectory(path.data());}
 void filemanager::clear_custom_mount_directories() {FileManager::ClearCustomMountDirectories();}
-VFilePtrReal filemanager::open_system_file(const std::string_view &cpath,FileMode mode) {return FileManager::OpenSystemFile(cpath.data(),to_string_mode(mode).c_str());}
+VFilePtrReal filemanager::open_system_file(const std::string_view &cpath,FileMode mode) {return FileManager::OpenSystemFile(cpath.data(),detail::to_string_mode(mode).c_str());}
 bool filemanager::create_path(const std::string_view &path) {return FileManager::CreatePath(path.data());}
 bool filemanager::create_directory(const std::string_view &dir) {return FileManager::CreateDirectory(dir.data());}
 std::pair<VDirectory*,VFile*> filemanager::add_virtual_file(const std::string_view &path,const std::shared_ptr<std::vector<uint8_t>> &data) {return FileManager::AddVirtualFile(path.data(),data);}
@@ -105,8 +105,16 @@ bool filemanager::remove_directory(const std::string_view &dir)
 }
 bool filemanager::rename_file(const std::string_view &file,const std::string_view &fNewName) {return FileManager::RenameFile(file.data(),fNewName.data());}
 void filemanager::close() {return FileManager::Close();}
-std::string filemanager::get_path(const std::string_view &path) {return FileManager::GetPath(std::string{path});}
-std::string filemanager::get_file(const std::string_view &path) {return FileManager::GetFile(std::string{path});}
+std::string filemanager::get_path(const std::string_view &path)
+{
+	std::string spath{path};
+	return FileManager::GetPath(spath);
+}
+std::string filemanager::get_file(const std::string_view &path)
+{
+	std::string spath{path};
+	return FileManager::GetFile(spath);
+}
 std::string filemanager::get_canonicalized_path(const std::string_view &path) {return FileManager::GetCanonicalizedPath(std::string{path});}
 std::string filemanager::get_sub_path(const std::string_view &path) {return FileManager::GetSubPath(std::string{path});}
 unsigned long long filemanager::get_file_size(const std::string_view &name,fsys::SearchFlags fsearchmode) {return FileManager::GetFileSize(std::string{name},fsearchmode);}
@@ -158,11 +166,13 @@ std::string filemanager::get_root_path()
 
 bool filemanager::find_local_path(const std::string_view &path,const std::string_view &rpath,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
 {
-	return FileManager::FindLocalPath(std::string{path},std::string{rpath},includeFlags,excludeFlags);
+	std::string spath {rpath};
+	return FileManager::FindLocalPath(std::string{path},spath,includeFlags,excludeFlags);
 }
 bool filemanager::find_absolute_path(const std::string_view &path,const std::string_view &rpath,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
 {
-	return FileManager::FindAbsolutePath(std::string{path},std::string{rpath},includeFlags,excludeFlags);
+	std::string spath {rpath};
+	return FileManager::FindAbsolutePath(std::string{path},spath,includeFlags,excludeFlags);
 }
 char filemanager::get_directory_separator()
 {
@@ -195,7 +205,7 @@ bool filemanager::create_system_directory(const std::string_view &dir)
 
 VFilePtr filemanager::open_package_file(const std::string_view &packageName,const std::string_view &cpath,FileMode mode,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
 {
-	return FileManager::OpenPackageFile(packageName.data(),cpath.data(),to_string_mode(mode).data(),includeFlags,excludeFlags);
+	return FileManager::OpenPackageFile(packageName.data(),cpath.data(),detail::to_string_mode(mode).data(),includeFlags,excludeFlags);
 }
 fsys::PackageManager *filemanager::get_package_manager(const std::string_view &name)
 {

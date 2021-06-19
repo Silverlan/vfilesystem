@@ -204,6 +204,10 @@ namespace filemanager
 		Write = Read<<1u,
 		Append = Write<<1u
 	};
+	namespace detail
+	{
+		std::string to_string_mode(FileMode mode);
+	};
 	DLLFSYSTEM VFilePtr open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
 	DLLFSYSTEM bool write_file(const std::string_view &path,const std::string_view &contents);
 	DLLFSYSTEM std::optional<std::string> read_file(const std::string_view &path);
@@ -273,7 +277,7 @@ REGISTER_BASIC_BITWISE_OPERATORS(filemanager::FileMode)
 template<class T>
 	T filemanager::open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
 {
-	return FileManager::OpenFile<T>(path.data(),to_string_mode(mode).c_str(),includeFlags,excludeFlags);
+	return FileManager::OpenFile<T>(path.data(),detail::to_string_mode(mode).c_str(),includeFlags,excludeFlags);
 }
 
 class DLLFSYSTEM FileManager
