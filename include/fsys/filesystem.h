@@ -206,7 +206,7 @@ namespace filemanager
 	};
 	namespace detail
 	{
-		std::string to_string_mode(FileMode mode);
+		DLLFSYSTEM std::string to_string_mode(FileMode mode);
 	};
 	DLLFSYSTEM VFilePtr open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
 	DLLFSYSTEM bool write_file(const std::string_view &path,const std::string_view &contents);
