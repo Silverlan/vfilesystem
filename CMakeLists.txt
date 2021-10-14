@@ -11,8 +11,14 @@ set(DEPENDENCY_SHAREDUTILS_LIBRARY "" CACHE FILEPATH "Path to sharedutils librar
 set(DEPENDENCY_MATHUTIL_INCLUDE "" CACHE PATH "Path to mathutil include directory.")
 set(DEPENDENCY_MATHUTIL_LIBRARY "" CACHE FILEPATH "Path to mathutil library. Required if this is compiled as a shared library.")
 set(DEPENDENCY_BZIP2_INCLUDE "" CACHE PATH "Path to bzip2 include directory.")
+option(VFILESYSTEM_STATIC "Build as static library?" OFF)
 
-set(LIB_TYPE SHARED)
+if(${VFILESYSTEM_STATIC})
+	set(LIB_TYPE STATIC)
+	add_definitions(-DVFILESYSTEM_STATIC)
+else()
+	set(LIB_TYPE SHARED)
+endif()
 
 add_definitions(-DVFILESYSTEM_DLL)
 add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
