@@ -43,13 +43,13 @@ jobs:
         uses: Silverlan/common_actions/get_glm@main
           
       - name: Download submodule - mathutil
-        uses: Silverlan/common_actions/get_submodule@main
+        uses: Silverlan/common_actions/get_submodule@actions
         with:
           repo: 'https://github.com/Silverlan/mathutil.git'
           repo_name: 'mathutil'
           
       - name: Download submodule - sharedutils
-        uses: Silverlan/common_actions/get_submodule@main
+        uses: Silverlan/common_actions/get_submodule@actions
         with:
           repo: 'https://github.com/Silverlan/sharedutils.git'
           repo_name: 'sharedutils'
