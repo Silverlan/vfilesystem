@@ -96,26 +96,33 @@ jobs:
         run: |
           sudo apt update
           sudo apt install gcc-11 g++-11
-          
-          
+  
       - name: Download submodules
         run: |
           git submodule update --init --recursive
-          
+  
       - name: Download submodule - GLM
         uses: Silverlan/common_actions/get_glm@main
           
       - name: Download submodule - mathutil
-        uses: Silverlan/common_actions/get_submodule@main
+        uses: Silverlan/common_actions/get_submodule@actions
         with:
           repo: 'https://github.com/Silverlan/mathutil.git'
           repo_name: 'mathutil'
           
       - name: Download submodule - sharedutils
-        uses: Silverlan/common_actions/get_submodule@main
+        uses: Silverlan/common_actions/get_submodule@actions
         with:
           repo: 'https://github.com/Silverlan/sharedutils.git'
           repo_name: 'sharedutils'
+          
+      - name: Download submodule - bzip2
+        uses: Silverlan/common_actions/get_submodule@actions
+        with:
+          dir: 'third_party_libs'
+          repo: 'https://github.com/sergiud/bzip2.git'
+          repo_name: 'bzip2'
+          repo_branch: 'cmake'
           
       - name: CMake Build
         uses: Silverlan/common_actions/build_cmake@main
