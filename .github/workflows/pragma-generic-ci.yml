@@ -59,7 +59,7 @@ jobs:
         with:
           dir: 'third-party-libs'
           repo: 'https://github.com/sergiud/bzip2.git'
-          repo_name: 'bzip2-cmake'
+          repo_name: 'bzip2'
           branchName: 'cmake'
           
       - name: CMake Build
