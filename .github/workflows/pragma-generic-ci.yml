@@ -60,7 +60,7 @@ jobs:
           dir: 'third-party-libs'
           repo: 'https://github.com/sergiud/bzip2.git'
           repo_name: 'bzip2'
-          branchName: 'cmake'
+          repo_branch: 'cmake'
           
       - name: CMake Build
         uses: Silverlan/common_actions/build_cmake@main
