@@ -8,7 +8,7 @@ on: [push]
 #    branches: [ master ]
     
 env:
-  shared_cmake_definitions: -DDEPENDENCY_GLM_INCLUDE=./third_party_libs/glm -DDEPENDENCY_MATHUTIL_INCLUDE=./external_libs/mathutil/include -DDEPENDENCY_SHAREDUTILS_INCLUDE=./external_libs/sharedutils/include -DMATHUTIL_ENABLE_MESH_FUNCTIONS=OFF -DSHAREDUTILS_STATIC=ON -DMATHUTIL_STATIC=ON -DVFILESYSTEM_STATIC=ON
+  shared_cmake_definitions: -DDEPENDENCY_BZIP2_INCLUDE=./third_party_libs/bzip2 -DDEPENDENCY_GLM_INCLUDE=./third_party_libs/glm -DDEPENDENCY_MATHUTIL_INCLUDE=./external_libs/mathutil/include -DDEPENDENCY_SHAREDUTILS_INCLUDE=./external_libs/sharedutils/include -DMATHUTIL_ENABLE_MESH_FUNCTIONS=OFF -DSHAREDUTILS_STATIC=ON -DMATHUTIL_STATIC=ON -DVFILESYSTEM_STATIC=ON
 
 jobs:
   # WINDOWS x64 MSVC
@@ -53,6 +53,14 @@ jobs:
         with:
           repo: 'https://github.com/Silverlan/sharedutils.git'
           repo_name: 'sharedutils'
+          
+      - name: Download submodule - bzip2
+        uses: Silverlan/common_actions/get_submodule@actions
+        with:
+          dir: 'third-party-libs'
+          repo: 'https://github.com/sergiud/bzip2.git'
+          repo_name: 'bzip2-cmake'
+          branchName: 'cmake'
           
       - name: CMake Build
         uses: Silverlan/common_actions/build_cmake@main
