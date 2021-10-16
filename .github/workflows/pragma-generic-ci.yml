@@ -44,19 +44,19 @@ jobs:
         uses: Silverlan/common_actions/get_glm@main
           
       - name: Download submodule - mathutil
-        uses: Silverlan/common_actions/get_submodule@actions
+        uses: Silverlan/common_actions/get_submodule@main
         with:
           repo: 'https://github.com/Silverlan/mathutil.git'
           repo_name: 'mathutil'
           
       - name: Download submodule - sharedutils
-        uses: Silverlan/common_actions/get_submodule@actions
+        uses: Silverlan/common_actions/get_submodule@main
         with:
           repo: 'https://github.com/Silverlan/sharedutils.git'
           repo_name: 'sharedutils'
           
       - name: Download submodule - bzip2
-        uses: Silverlan/common_actions/get_submodule@actions
+        uses: Silverlan/common_actions/get_submodule@main
         with:
           dir: 'third_party_libs'
           repo: 'https://github.com/sergiud/bzip2.git'
@@ -105,19 +105,19 @@ jobs:
         uses: Silverlan/common_actions/get_glm@main
           
       - name: Download submodule - mathutil
-        uses: Silverlan/common_actions/get_submodule@actions
+        uses: Silverlan/common_actions/get_submodule@main
         with:
           repo: 'https://github.com/Silverlan/mathutil.git'
           repo_name: 'mathutil'
           
       - name: Download submodule - sharedutils
-        uses: Silverlan/common_actions/get_submodule@actions
+        uses: Silverlan/common_actions/get_submodule@main
         with:
           repo: 'https://github.com/Silverlan/sharedutils.git'
           repo_name: 'sharedutils'
           
       - name: Download submodule - bzip2
-        uses: Silverlan/common_actions/get_submodule@actions
+        uses: Silverlan/common_actions/get_submodule@main
         with:
           dir: 'third_party_libs'
           repo: 'https://github.com/sergiud/bzip2.git'
