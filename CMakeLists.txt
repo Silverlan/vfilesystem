@@ -12,12 +12,18 @@ set(DEPENDENCY_MATHUTIL_INCLUDE "" CACHE PATH "Path to mathutil include director
 set(DEPENDENCY_MATHUTIL_LIBRARY "" CACHE FILEPATH "Path to mathutil library. Required if this is compiled as a shared library.")
 set(DEPENDENCY_BZIP2_INCLUDE "" CACHE PATH "Path to bzip2 include directory.")
 option(VFILESYSTEM_STATIC "Build as static library?" OFF)
+option(LINK_COMMON_LIBS_STATIC "Link to common Pragma libraries statically?" OFF)
 
 if(${VFILESYSTEM_STATIC})
 	set(LIB_TYPE STATIC)
 	add_definitions(-DVFILESYSTEM_STATIC)
 else()
 	set(LIB_TYPE SHARED)
+endif()
+
+if(${LINK_COMMON_LIBS_STATIC})
+	add_definitions(-DMUTIL_STATIC)
+	add_definitions(-DSHUTIL_STATIC)
 endif()
 
 add_definitions(-DVFILESYSTEM_DLL)
