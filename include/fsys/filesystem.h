@@ -274,12 +274,6 @@ namespace filemanager
 };
 REGISTER_BASIC_BITWISE_OPERATORS(filemanager::FileMode)
 
-template<class T>
-	T filemanager::open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
-{
-	return FileManager::OpenFile<T>(path.data(),detail::to_string_mode(mode).c_str(),includeFlags,excludeFlags);
-}
-
 class DLLFSYSTEM FileManager
 {
 private:
@@ -360,6 +354,13 @@ public:
 
 	static bool ComparePath(const std::string &a,const std::string &b);
 };
+
+template<class T>
+	T filemanager::open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
+{
+	return FileManager::OpenFile<T>(path.data(),detail::to_string_mode(mode).c_str(),includeFlags,excludeFlags);
+}
+
 #pragma warning(pop)
 
 template<class T>
