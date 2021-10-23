@@ -35,6 +35,16 @@ runs:
       uses: Silverlan/sharedutils/github_actions/build@master
       with:
         root_dir: "${{ env.GA_ROOT_DIR }}/external_libs/sharedutils"
+        
+    - name: Download bzip2
+      uses: Silverlan/common_actions/get_submodule@main
+      with:
+        dir: 'third_party_libs'
+        repo: 'https://github.com/sergiud/bzip2.git'
+        repo_name: 'bzip2'
+        repo_branch: 'cmake'
+        cmake_var: 'DEPENDENCY_BZIP2_INCLUDE'
+        include_dir: '.'
 
     - uses: Silverlan/common_actions/build_cmake@main
       name: CMake Build
