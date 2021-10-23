@@ -34,7 +34,7 @@ runs:
     - name: Build submodule - sharedutils
       uses: Silverlan/sharedutils/github_actions/build@master
       with:
-        root_dir: "${{ env.GA_ROOT_DIR }}/external_libs/mathutil"
+        root_dir: "${{ env.GA_ROOT_DIR }}/external_libs/sharedutils"
 
     - uses: Silverlan/common_actions/build_cmake@main
       name: CMake Build
