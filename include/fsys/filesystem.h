@@ -194,7 +194,7 @@ public:
 #include <string_view>
 
 struct MountDirectory;
-namespace fsys {class PackageManager; class Package;};
+namespace fsys {class PackageManager; class Package; class FileIndexCache;};
 namespace filemanager
 {
 	enum class FileMode : uint8_t
@@ -211,6 +211,10 @@ namespace filemanager
 	DLLFSYSTEM VFilePtr open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
 	DLLFSYSTEM bool write_file(const std::string_view &path,const std::string_view &contents);
 	DLLFSYSTEM std::optional<std::string> read_file(const std::string_view &path);
+	DLLFSYSTEM void set_use_file_index_cache(bool useCache);
+	DLLFSYSTEM fsys::FileIndexCache *get_file_index_cache();
+	DLLFSYSTEM bool is_file_index_cache_enabled();
+	DLLFSYSTEM void reset_file_index_cache();
 
 	template<class T>
 		T open_file(const std::string_view &path,FileMode mode,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);

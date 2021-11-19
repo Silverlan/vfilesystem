@@ -26,10 +26,31 @@ extern "C" {
 #include <sharedutils/util_path.hpp>
 #include "fsys/fsys_searchflags.hpp"
 #include "fsys/fsys_package.hpp"
+#include "fsys/file_index_cache.hpp"
 #include "impl_fsys_util.hpp"
 #include <filesystem>
 #include <array>
 #include <iostream>
+
+static std::unique_ptr<fsys::FileIndexCache> g_fileIndexCache {};
+void filemanager::set_use_file_index_cache(bool useCache)
+{
+	if(!useCache)
+	{
+		g_fileIndexCache = nullptr;
+		return;
+	}
+	g_fileIndexCache = std::make_unique<fsys::FileIndexCache>();
+	reset_file_index_cache();
+}
+fsys::FileIndexCache *filemanager::get_file_index_cache() {return g_fileIndexCache.get();}
+bool filemanager::is_file_index_cache_enabled() {return g_fileIndexCache != nullptr;}
+void filemanager::reset_file_index_cache()
+{
+	if(!g_fileIndexCache)
+		return;
+	g_fileIndexCache->Reset(get_root_path());
+}
 
 std::string filemanager::detail::to_string_mode(filemanager::FileMode mode)
 {

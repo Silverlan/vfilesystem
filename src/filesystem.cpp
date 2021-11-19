@@ -26,6 +26,7 @@ extern "C" {
 #include <sharedutils/util_path.hpp>
 #include "fsys/fsys_searchflags.hpp"
 #include "fsys/fsys_package.hpp"
+#include "fsys/file_index_cache.hpp"
 #include "impl_fsys_util.hpp"
 #include <array>
 #include <mutex>
@@ -181,6 +182,9 @@ void FileManager::AddCustomMountDirectory(const char *cpath,bool bAbsolutePath,f
 			return;
 		}
 	}
+	auto *cache = filemanager::get_file_index_cache();
+	if(cache)
+		cache->QueuePath((bAbsolutePath ? "" : (filemanager::get_root_path() +'/')) +path);
 	m_customMount.push_back(MountDirectory(path,bAbsolutePath,searchMode));
 }
 
@@ -357,6 +361,7 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath,const char *mode,fsy
 	}
 	if((includeFlags &fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return NULL;
+
 	std::string appPath = GetRootPath() +"\\";
 	std::string fpath;
 	bool bFound = false;
@@ -952,6 +957,11 @@ DLLFSYSTEM bool FileManager::Exists(std::string name,fsys::SearchFlags includeFl
 	}
 	if((includeFlags &fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return false;
+
+	auto *fic = filemanager::get_file_index_cache();
+	if(fic && fic->IsComplete())
+		return fic->Exists(name);
+
 	std::string appPath = GetRootPath();
 	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
@@ -1025,6 +1035,21 @@ DLLFSYSTEM unsigned long long FileManager::GetFileFlags(std::string name,fsys::S
 	}
 	if((includeFlags &fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return FVFILE_INVALID;
+
+	auto *fic = filemanager::get_file_index_cache();
+	if(fic && fic->IsComplete())
+	{
+		auto type = fic->FindFileType(name);
+		uint64_t flags = 0;
+		switch(type)
+		{
+		case fsys::FileIndexCache::Type::Directory:
+			flags |= FVFILE_DIRECTORY;
+			break;
+		}
+		return flags;
+	}
+
 	std::string appPath = GetRootPath() +"\\";
 	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
