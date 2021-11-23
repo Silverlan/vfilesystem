@@ -38,6 +38,8 @@ namespace fsys
 		std::optional<ItemInfo> FindItemInfo(std::string path) const;
 		Type FindFileType(std::string path) const;
 		bool Exists(std::string path) const;
+		void Add(const std::string_view &path,Type type);
+		void Remove(const std::string_view &path);
 	private:
 		void NormalizePath(std::string &path) const;
 		unsigned long Hash(const std::string_view &key,bool isAbsolutePath) const;

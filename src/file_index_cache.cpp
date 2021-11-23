@@ -74,6 +74,22 @@ bool fsys::FileIndexCache::Exists(std::string path) const
 	return it != m_indexCache.end();
 }
 
+void fsys::FileIndexCache::Add(const std::string_view &path,Type type)
+{
+	auto hash = Hash(path,false);
+	std::unique_lock lock {m_cacheMutex};
+	m_indexCache[hash].type = type;
+}
+void fsys::FileIndexCache::Remove(const std::string_view &path)
+{
+	auto hash = Hash(path,false);
+	std::unique_lock lock {m_cacheMutex};
+	auto it = m_indexCache.find(hash);
+	if(it == m_indexCache.end())
+		return;
+	m_indexCache.erase(it);
+}
+
 std::optional<fsys::FileIndexCache::ItemInfo> fsys::FileIndexCache::FindItemInfo(std::string path) const
 {
 	auto hash = Hash(path,false);

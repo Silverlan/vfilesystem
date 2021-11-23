@@ -976,6 +976,22 @@ DLLFSYSTEM bool FileManager::Exists(std::string name,fsys::SearchFlags includeFl
 	return false;
 }
 
+unsigned long long get_file_attributes(const std::string &fpath)
+{
+#ifdef __linux__
+	class stat st;
+	std::replace(fpath.begin(),fpath.end(),'\\','/');
+	if(stat(fpath.c_str(),&st) == -1)
+		return INVALID_FILE_ATTRIBUTES;
+	const bool isDir = (st.st_mode &S_IFDIR) != 0;
+	if(isDir == true)
+		return FILE_ATTRIBUTE_DIRECTORY;
+	return FILE_ATTRIBUTE_NORMAL;
+#else
+	return GetFileAttributesA(fpath.c_str());
+#endif
+}
+
 #undef GetFileAttributes
 DLLFSYSTEM unsigned long long FileManager::GetFileAttributes(std::string name)
 {
@@ -990,21 +1006,9 @@ DLLFSYSTEM unsigned long long FileManager::GetFileAttributes(std::string name)
 		std::string fpath = mountPath +"\\" +name;
 		if(bAbsolute == false)
 			fpath = appPath +"\\" +fpath;
-#ifdef __linux__
-		class stat st;
-		std::replace(fpath.begin(),fpath.end(),'\\','/');
-		if(stat(fpath.c_str(),&st) != -1)
-		{
-			const bool isDir = (st.st_mode &S_IFDIR) != 0;
-			if(isDir == true)
-				return FILE_ATTRIBUTE_DIRECTORY;
-			return FILE_ATTRIBUTE_NORMAL;
-		}
-#else
-		unsigned int attr = GetFileAttributesA(fpath.c_str());
-		if(attr != INVALID_FILE_ATTRIBUTES)
-			return attr;
-#endif
+		auto attrs = get_file_attributes(fpath);
+		if(attrs != INVALID_FILE_ATTRIBUTES)
+			return attrs;
 	}
 	return INVALID_FILE_ATTRIBUTES;
 }

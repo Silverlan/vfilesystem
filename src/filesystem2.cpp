@@ -44,6 +44,17 @@ void filemanager::set_use_file_index_cache(bool useCache)
 	reset_file_index_cache();
 }
 fsys::FileIndexCache *filemanager::get_file_index_cache() {return g_fileIndexCache.get();}
+unsigned long long get_file_attributes(const std::string &fpath);
+void filemanager::update_file_index_cache(const std::string_view &path)
+{
+	if(!g_fileIndexCache)
+		return;
+	auto attrs = get_file_attributes(path);
+	if(attrs == INVALID_FILE_ATTRIBUTES)
+		g_fileIndexCache->Remove(path);
+	else
+		g_fileIndexCache->Add(path,(attrs &FILE_ATTRIBUTE_DIRECTORY) == 0 ? fsys::FileIndexCache::Type::File : fsys::FileIndexCache::Type::Directory);
+}
 bool filemanager::is_file_index_cache_enabled() {return g_fileIndexCache != nullptr;}
 void filemanager::reset_file_index_cache()
 {

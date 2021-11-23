@@ -213,6 +213,7 @@ namespace filemanager
 	DLLFSYSTEM std::optional<std::string> read_file(const std::string_view &path);
 	DLLFSYSTEM void set_use_file_index_cache(bool useCache);
 	DLLFSYSTEM fsys::FileIndexCache *get_file_index_cache();
+	DLLFSYSTEM void update_file_index_cache(const std::string_view &path);
 	DLLFSYSTEM bool is_file_index_cache_enabled();
 	DLLFSYSTEM void reset_file_index_cache();
 
