@@ -24,6 +24,7 @@ namespace fsys
 		virtual int32_t ReadChar() override;
 		virtual size_t GetSize() override;
 		virtual bool Eof() override;
+		::VFilePtr &GetFile() {return m_file;}
 	private:
 		::VFilePtr m_file;
 	};
