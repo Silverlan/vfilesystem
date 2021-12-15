@@ -40,7 +40,7 @@ unsigned long fsys::FileIndexCache::Hash(const std::string_view &key,bool isAbso
 		hash = 33 * hash + c;
 	}
 	return hash;
-} 
+}
 
 fsys::FileIndexCache::FileIndexCache()
 	: m_pool{5}

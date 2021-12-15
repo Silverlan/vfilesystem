@@ -30,3 +30,10 @@ void fsys::File::Seek(size_t offset,Whence whence)
 	return m_file->Seek(offset,SEEK_SET);
 }
 int32_t fsys::File::ReadChar() {return m_file->ReadChar();}
+std::optional<std::string> fsys::File::GetFileName() const
+{
+	auto *f = dynamic_cast<VFilePtrInternalReal*>(m_file.get());
+	if(!f)
+		return {};
+	return f->GetPath();
+}
