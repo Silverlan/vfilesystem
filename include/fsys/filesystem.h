@@ -213,7 +213,7 @@ namespace filemanager
 	DLLFSYSTEM std::optional<std::string> read_file(const std::string_view &path);
 	DLLFSYSTEM void set_use_file_index_cache(bool useCache);
 	DLLFSYSTEM fsys::FileIndexCache *get_file_index_cache();
-	DLLFSYSTEM void update_file_index_cache(const std::string_view &path);
+	DLLFSYSTEM void update_file_index_cache(const std::string_view &path,bool absolutePath=false);
 	DLLFSYSTEM bool is_file_index_cache_enabled();
 	DLLFSYSTEM void reset_file_index_cache();
 
@@ -346,6 +346,7 @@ public:
 	// Note: This will not include custom mounts that are located outside of the program location
 	static bool FindLocalPath(std::string path,std::string &rpath,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
 	static bool FindAbsolutePath(std::string path,std::string &rpath,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+	static bool AbsolutePathToCustomMountPath(const std::string &path,std::string &outMountPath,std::string &relativePath,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
 	static char GetDirectorySeparator();
 	static bool RemoveSystemFile(const char *file);
 	static bool RemoveSystemDirectory(const char *dir);

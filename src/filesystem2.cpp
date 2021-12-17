@@ -32,6 +32,8 @@ extern "C" {
 #include <array>
 #include <iostream>
 
+#undef CreateFile
+
 static std::unique_ptr<fsys::FileIndexCache> g_fileIndexCache {};
 void filemanager::set_use_file_index_cache(bool useCache)
 {
@@ -45,10 +47,28 @@ void filemanager::set_use_file_index_cache(bool useCache)
 }
 fsys::FileIndexCache *filemanager::get_file_index_cache() {return g_fileIndexCache.get();}
 unsigned long long get_file_attributes(const std::string &fpath);
-void filemanager::update_file_index_cache(const std::string_view &path)
+void filemanager::update_file_index_cache(const std::string_view &path,bool absolutePath)
 {
 	if(!g_fileIndexCache)
 		return;
+	if(absolutePath)
+	{
+		auto rootPath = util::Path::CreatePath(get_root_path());
+		auto fpath = util::Path::CreateFile(std::string{path});
+		if(fpath.MakeRelative(rootPath))
+		{
+			std::string mountPath;
+			std::string relPath;
+			if(FileManager::AbsolutePathToCustomMountPath(fpath.GetString(),mountPath,relPath))
+			{
+				update_file_index_cache(relPath);
+				update_file_index_cache(mountPath +'/' +relPath);
+			}
+			else
+				update_file_index_cache(fpath.GetString());
+		}
+		return;
+	}
 	auto attrs = get_file_attributes(path);
 	if(attrs == INVALID_FILE_ATTRIBUTES)
 		g_fileIndexCache->Remove(path);

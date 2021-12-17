@@ -282,6 +282,8 @@ DLLFSYSTEM VFilePtrReal FileManager::OpenSystemFile(const char *cpath,const char
 		return nullptr;
 	ptrReal->m_bBinary = FileManager::IsBinaryMode(mode);
 	ptrReal->m_bRead = !FileManager::IsWriteMode(mode);
+	if(!ptrReal->m_bRead)
+		filemanager::update_file_index_cache(path,true);
 	return ptrReal;
 }
 
@@ -332,6 +334,8 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath,const char *mode,fsy
 			pfile = ptrReal;
 			pfile->m_bBinary = bBinary;
 			pfile->m_bRead = !bWrite;
+			if(bWrite)
+				filemanager::update_file_index_cache(fpath,true);
 			return pfile;
 		}
 	}
@@ -421,11 +425,21 @@ bool FileManager::RemoveSystemFile(const char *file)
 	std::string path = GetCanonicalizedPath(file);
 	std::replace(path.begin(),path.end(),'\\','/');
 	if(remove(path.c_str()) == 0)
+	{
+		filemanager::update_file_index_cache(path,true);
 		return true;
+	}
 	return false;
 }
 
-bool FileManager::RemoveFile(const char *file) {return RemoveSystemFile((GetRootPath() +'\\' +GetCanonicalizedPath(file)).c_str());}
+bool FileManager::RemoveFile(const char *file)
+{
+	auto fcanon = GetCanonicalizedPath(file);
+	auto r = RemoveSystemFile((GetRootPath() +'\\' +fcanon).c_str());
+	if(r)
+		filemanager::update_file_index_cache(fcanon,true);
+	return r;
+}
 
 static bool remove_directory(const std::string &rootPath,const char *cdir,const std::function<void(const char*,std::vector<std::string>*,std::vector<std::string>*,bool)> &fFindFiles,const std::function<bool(const char*)> &fRemoveFile)
 {
@@ -444,10 +458,14 @@ static bool remove_directory(const std::string &rootPath,const char *cdir,const 
 	std::string p = rootPath +dir;
 #ifdef _WIN32
 	auto r = ::RemoveDirectoryA(p.c_str());
+	if(r != 0)
+		filemanager::update_file_index_cache(p,true);
 	return (r != 0) ? true : false;
 #else
 	std::replace(p.begin(),p.end(),'\\','/');
 	auto r = rmdir(p.c_str());
+	if(r == 0)
+		filemanager::update_file_index_cache(p,true);
 	return (r == 0) ? true : false;
 #endif
 }
@@ -468,7 +486,11 @@ static bool rename_file(const std::string &root,const std::string &file,const st
 	std::replace(pathNew.begin(),pathNew.end(),'\\','/');
 	fsys::impl::to_case_sensitive_path(path);
 	if(rename(path.c_str(),pathNew.c_str()) == 0)
+	{
+		filemanager::update_file_index_cache(path,true);
+		filemanager::update_file_index_cache(pathNew,true);
 		return true;
+	}
 	return false;
 }
 
@@ -496,6 +518,26 @@ bool FileManager::FindAbsolutePath(std::string path,std::string &rpath,fsys::Sea
 				rpath = appPath +rpath;
 			return true;
 		}
+	}
+	return false;
+}
+
+bool FileManager::AbsolutePathToCustomMountPath(const std::string &strPath,std::string &outMountPath,std::string &relativePath,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
+{
+	std::unique_lock lock {g_customMountMutex};
+	MountIterator it(m_customMount);
+	std::string mountPath;
+	util::Path path {strPath};
+	auto bAbsolute = false;
+	while(it.GetNextDirectory(mountPath,includeFlags,excludeFlags,bAbsolute))
+	{
+		if(bAbsolute == true)
+			continue;
+		if(path.MakeRelative(mountPath) == false)
+			continue;
+		outMountPath = std::move(mountPath);
+		relativePath = path.Move();
+		return true;
 	}
 	return false;
 }
