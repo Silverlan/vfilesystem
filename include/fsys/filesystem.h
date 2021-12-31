@@ -214,6 +214,8 @@ namespace filemanager
 	DLLFSYSTEM void set_use_file_index_cache(bool useCache);
 	DLLFSYSTEM fsys::FileIndexCache *get_file_index_cache();
 	DLLFSYSTEM void update_file_index_cache(const std::string_view &path,bool absolutePath=false);
+	// Force path into cache, even if file doesn't exist
+	DLLFSYSTEM void add_to_file_index_cache(const std::string_view &path,bool absolutePath=false,bool file=true);
 	DLLFSYSTEM bool is_file_index_cache_enabled();
 	DLLFSYSTEM void reset_file_index_cache();
 

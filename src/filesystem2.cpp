@@ -47,13 +47,13 @@ void filemanager::set_use_file_index_cache(bool useCache)
 }
 fsys::FileIndexCache *filemanager::get_file_index_cache() {return g_fileIndexCache.get();}
 unsigned long long get_file_attributes(const std::string &fpath);
-void filemanager::update_file_index_cache(const std::string_view &path,bool absolutePath)
+static void update_file_index_cache(const std::string_view &path,bool absolutePath,std::optional<fsys::FileIndexCache::Type> forceAddType)
 {
 	if(!g_fileIndexCache)
 		return;
 	if(absolutePath)
 	{
-		auto rootPath = util::Path::CreatePath(get_root_path());
+		auto rootPath = util::Path::CreatePath(filemanager::get_root_path());
 		auto fpath = util::Path::CreateFile(std::string{path});
 		if(fpath.MakeRelative(rootPath))
 		{
@@ -61,19 +61,32 @@ void filemanager::update_file_index_cache(const std::string_view &path,bool abso
 			std::string relPath;
 			if(FileManager::AbsolutePathToCustomMountPath(fpath.GetString(),mountPath,relPath))
 			{
-				update_file_index_cache(relPath);
-				update_file_index_cache(mountPath +'/' +relPath);
+				update_file_index_cache(relPath,false,forceAddType);
+				update_file_index_cache(mountPath +'/' +relPath,false,forceAddType);
 			}
 			else
-				update_file_index_cache(fpath.GetString());
+				update_file_index_cache(fpath.GetString(),false,forceAddType);
 		}
 		return;
 	}
-	auto attrs = get_file_attributes(path);
+	if(forceAddType.has_value())
+	{
+		g_fileIndexCache->Add(path,*forceAddType);
+		return;
+	}
+	auto attrs = filemanager::get_file_attributes(path);
 	if(attrs == INVALID_FILE_ATTRIBUTES)
 		g_fileIndexCache->Remove(path);
 	else
 		g_fileIndexCache->Add(path,(attrs &FILE_ATTRIBUTE_DIRECTORY) == 0 ? fsys::FileIndexCache::Type::File : fsys::FileIndexCache::Type::Directory);
+}
+void filemanager::add_to_file_index_cache(const std::string_view &path,bool absolutePath,bool file)
+{
+	::update_file_index_cache(path,absolutePath,file ? fsys::FileIndexCache::Type::File : fsys::FileIndexCache::Type::Directory);
+}
+void filemanager::update_file_index_cache(const std::string_view &path,bool absolutePath)
+{
+	::update_file_index_cache(path,absolutePath,{});
 }
 bool filemanager::is_file_index_cache_enabled() {return g_fileIndexCache != nullptr;}
 void filemanager::reset_file_index_cache()
