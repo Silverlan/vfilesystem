@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "fsys/file_index_cache.hpp"
+#include <sharedutils/util.h>
 
 static bool path_to_string(const std::filesystem::path &path,std::string &str)
 {
@@ -44,7 +45,11 @@ unsigned long fsys::FileIndexCache::Hash(const std::string_view &key,bool isAbso
 
 fsys::FileIndexCache::FileIndexCache()
 	: m_pool{5}
-{}
+{
+	auto n = m_pool.size();
+	for(auto i=decltype(n){0u};i<n;++i)
+		util::set_thread_name(m_pool.get_thread(i),"fsys_index_cache");
+}
 
 fsys::FileIndexCache::~FileIndexCache()
 {

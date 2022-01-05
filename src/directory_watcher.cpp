@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "fsys/directory_watcher.h"
+#include <sharedutils/util.h>
+#include <sharedutils/util_path.hpp>
 #include <assert.h>
 
 DirectoryWatcher::FileEvent::FileEvent(const std::string &fName)
@@ -20,7 +22,7 @@ DirectoryWatcher::DirectoryWatcher(const std::string &path,WatchFlags flags)
 	if(umath::is_flag_set(flags,WatchFlags::WatchDirectoryChanges))
 		notifyFilter |= FILE_NOTIFY_CHANGE_DIR_NAME;
 
-	auto hDir = std::make_shared<HANDLE>(CreateFile(
+	auto hDir = std::make_shared<HANDLE>(CreateFileA(
 		dstPath.c_str(),
 		GENERIC_READ | FILE_LIST_DIRECTORY,
 		FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
@@ -103,6 +105,9 @@ DirectoryWatcher::DirectoryWatcher(const std::string &path,WatchFlags flags)
 		CloseHandle(pollingOverlap->hEvent);
 		CloseHandle(m_exitEvent);
 	});
+	auto relPath = util::Path::CreatePath(dstPath);
+	relPath.MakeRelative(util::get_program_path());
+	util::set_thread_name(m_thread,"dir_watch_" +relPath.GetString());
 #else
 	throw ConstructException("Only supported on Windows systems");
 #endif
