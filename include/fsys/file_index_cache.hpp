@@ -8,6 +8,7 @@
 #include "fsys_definitions.hpp"
 #include <iostream>
 #include <filesystem>
+#include <optional>
 #include <unordered_map>
 #include <condition_variable>
 #include <sharedutils/ctpl_stl.h>

@@ -1022,8 +1022,9 @@ unsigned long long get_file_attributes(const std::string &fpath)
 {
 #ifdef __linux__
 	class stat st;
-	std::replace(fpath.begin(),fpath.end(),'\\','/');
-	if(stat(fpath.c_str(),&st) == -1)
+	std::string npath = fpath;
+	std::replace(npath.begin(),npath.end(),'\\','/');
+	if(stat(npath.c_str(),&st) == -1)
 		return INVALID_FILE_ATTRIBUTES;
 	const bool isDir = (st.st_mode &S_IFDIR) != 0;
 	if(isDir == true)
