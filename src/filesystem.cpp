@@ -937,7 +937,7 @@ DLLFSYSTEM void FileManager::WriteString(FILE *f,std::string str,bool bBinary)
 	fwrite(n,1,1,f);
 }
 
-DLLFSYSTEM unsigned long long FileManager::GetFileSize(std::string name,fsys::SearchFlags fsearchmode)
+DLLFSYSTEM std::uint64_t FileManager::GetFileSize(std::string name,fsys::SearchFlags fsearchmode)
 {
 	NormalizePath(name);
 	if((fsearchmode &fsys::SearchFlags::Virtual) == fsys::SearchFlags::Virtual)
