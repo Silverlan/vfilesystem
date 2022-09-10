@@ -252,7 +252,7 @@ namespace filemanager
 	DLLFSYSTEM bool is_system_file(const std::string_view &name);
 	DLLFSYSTEM bool is_system_dir(const std::string_view &name);
     DLLFSYSTEM std::uint64_t get_file_attributes(const std::string_view &name);
-    DLLFSYSTEM ustd::uint64_t get_file_flags(const std::string_view &name,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+    DLLFSYSTEM std::uint64_t get_file_flags(const std::string_view &name,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
 	DLLFSYSTEM std::string get_normalized_path(const std::string_view &path);
 	DLLFSYSTEM void find_files(const std::string_view &cfind,std::vector<std::string> *resfiles,std::vector<std::string> *resdirs,bool bKeepPath,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
 	DLLFSYSTEM void find_files(const std::string_view &cfind,std::vector<std::string> *resfiles,std::vector<std::string> *resdirs,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
