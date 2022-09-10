@@ -1036,7 +1036,7 @@ unsigned long long get_file_attributes(const std::string &fpath)
 }
 
 #undef GetFileAttributes
-DLLFSYSTEM unsigned long long FileManager::GetFileAttributes(std::string name)
+DLLFSYSTEM std::uint64_t FileManager::GetFileAttributes(std::string name)
 {
 	NormalizePath(name);
 	std::string appPath = GetRootPath() +"\\";
@@ -1056,7 +1056,7 @@ DLLFSYSTEM unsigned long long FileManager::GetFileAttributes(std::string name)
 	return INVALID_FILE_ATTRIBUTES;
 }
 
-DLLFSYSTEM unsigned long long FileManager::GetFileFlags(std::string name,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
+DLLFSYSTEM std::uint64_t FileManager::GetFileFlags(std::string name,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags)
 {
 	NormalizePath(name);
 	if((includeFlags &fsys::SearchFlags::Virtual) == fsys::SearchFlags::Virtual)
