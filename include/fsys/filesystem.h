@@ -332,8 +332,8 @@ public:
 	static bool ExistsSystem(std::string name);
 	static bool IsSystemFile(std::string name);
 	static bool IsSystemDir(std::string name);
-	static unsigned long long GetFileAttributes(std::string name);
-	static unsigned long long GetFileFlags(std::string name,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
+    static std::uint64_t GetFileAttributes(std::string name);
+    static std::uint64_t GetFileFlags(std::string name,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
 	static std::string GetNormalizedPath(std::string path);
 	static void FindFiles(const char *cfind,std::vector<std::string> *resfiles,std::vector<std::string> *resdirs,bool bKeepPath,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
 	static void FindFiles(const char *cfind,std::vector<std::string> *resfiles,std::vector<std::string> *resdirs,fsys::SearchFlags includeFlags=fsys::SearchFlags::All,fsys::SearchFlags excludeFlags=fsys::SearchFlags::None);
