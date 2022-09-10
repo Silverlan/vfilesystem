@@ -182,15 +182,15 @@ std::string filemanager::get_file(const std::string_view &path)
 }
 std::string filemanager::get_canonicalized_path(const std::string_view &path) {return FileManager::GetCanonicalizedPath(std::string{path});}
 std::string filemanager::get_sub_path(const std::string_view &path) {return FileManager::GetSubPath(std::string{path});}
-unsigned long long filemanager::get_file_size(const std::string_view &name,fsys::SearchFlags fsearchmode) {return FileManager::GetFileSize(std::string{name},fsearchmode);}
+std::uint64_t filemanager::get_file_size(const std::string_view &name,fsys::SearchFlags fsearchmode) {return FileManager::GetFileSize(std::string{name},fsearchmode);}
 bool filemanager::exists(const std::string_view &name,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags) {return FileManager::Exists(std::string{name},includeFlags,excludeFlags);}
 bool filemanager::is_file(const std::string_view &name,fsys::SearchFlags fsearchmode) {return FileManager::IsFile(std::string{name},fsearchmode);}
 bool filemanager::is_dir(const std::string_view &name,fsys::SearchFlags fsearchmode) {return FileManager::IsDir(std::string{name},fsearchmode);}
 bool filemanager::exists_system(const std::string_view &name) {return FileManager::ExistsSystem(std::string{name});}
 bool filemanager::is_system_file(const std::string_view &name) {return FileManager::IsSystemFile(std::string{name});}
 bool filemanager::is_system_dir(const std::string_view &name) {return FileManager::IsSystemDir(std::string{name});}
-unsigned long long filemanager::get_file_attributes(const std::string_view &name) {return FileManager::GetFileAttributes(std::string{name});}
-unsigned long long filemanager::get_file_flags(const std::string_view &name,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags) {return FileManager::GetFileFlags(std::string{name},includeFlags,excludeFlags);}
+std::uint64_t filemanager::get_file_attributes(const std::string_view &name) {return FileManager::GetFileAttributes(std::string{name});}
+std::uint64_t filemanager::get_file_flags(const std::string_view &name,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags) {return FileManager::GetFileFlags(std::string{name},includeFlags,excludeFlags);}
 std::string filemanager::get_normalized_path(const std::string_view &path) {return FileManager::GetNormalizedPath(std::string{path});}
 void filemanager::find_files(const std::string_view &cfind,std::vector<std::string> *resfiles,std::vector<std::string> *resdirs,bool bKeepPath,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlag)
 {
