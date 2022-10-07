@@ -4,6 +4,7 @@
 
 #include "fsys/file_index_cache.hpp"
 #include <sharedutils/util.h>
+#include <sharedutils/magic_enum.hpp>
 
 static bool path_to_string(const std::filesystem::path &path,std::string &str)
 {
@@ -76,6 +77,7 @@ bool fsys::FileIndexCache::Exists(std::string path) const
 	auto hash = Hash(path,false);
 	std::unique_lock lock {m_cacheMutex};
 	auto it = m_indexCache.find(hash);
+    std::cout<<"[FIT] Exists("<<path<<"): "<<((it != m_indexCache.end()) ? "1" : "0")<<std::endl; //THIS WILL BREAK IN MT ENVIRONMENT!
 	return it != m_indexCache.end();
 }
 
@@ -83,6 +85,7 @@ void fsys::FileIndexCache::Add(const std::string_view &path,Type type)
 {
 	auto hash = Hash(path,false);
 	std::unique_lock lock {m_cacheMutex};
+	std::cout<<"[FIT] Add("<<path<<","<<std::string{magic_enum::enum_name(type)}<<")"<<std::endl;
 	m_indexCache[hash].type = type;
 }
 void fsys::FileIndexCache::Remove(const std::string_view &path)
@@ -92,6 +95,7 @@ void fsys::FileIndexCache::Remove(const std::string_view &path)
 	auto it = m_indexCache.find(hash);
 	if(it == m_indexCache.end())
 		return;
+	std::cout<<"[FIT] Remove("<<path<<")"<<std::endl;
 	m_indexCache.erase(it);
 }
 
@@ -168,11 +172,13 @@ void fsys::FileIndexCache::DecrementPending()
 
 void fsys::FileIndexCache::IterateFiles(size_t rootLen,const std::filesystem::directory_entry &path)
 {
+	std::cout<<"[FIT] IterateFiles("<<path<<")"<<std::endl;
 	std::vector<std::pair<size_t,ItemInfo>> localCache;
 	auto addItem = [this,&localCache,rootLen](const std::filesystem::path &path,ItemInfo info) {
 		std::string strPath;
 		if(path_to_string(path,strPath) == false)
 			return;
+		std::cout<<"[FIT] addItem("<<path<<")"<<std::endl;
 		auto hash = Hash(strPath.substr(rootLen),false);
 		localCache.push_back(std::make_pair(hash,info));
 	};

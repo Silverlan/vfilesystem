@@ -183,8 +183,15 @@ void FileManager::AddCustomMountDirectory(const char *cpath,bool bAbsolutePath,f
 		}
 	}
 	auto *cache = filemanager::get_file_index_cache();
-	if(cache)
-		cache->QueuePath((bAbsolutePath ? "" : (filemanager::get_root_path() +'/')) +path);
+    if(cache)
+    {
+        //Before we actually request to cache all entries, nativize the file entry.
+        auto cachedPath = bAbsolutePath ? "" : (filemanager::get_root_path() +'/') +path;
+        //cachedPath.make_preferred();
+        std::replace(cachedPath.begin(),cachedPath.end(),DIR_SEPARATOR_OTHER,DIR_SEPARATOR);
+        cache->QueuePath(cachedPath);
+    }
+
 	m_customMount.push_back(MountDirectory(path,bAbsolutePath,searchMode));
 }
 
