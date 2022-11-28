@@ -172,6 +172,9 @@ void FileManager::AddCustomMountDirectory(const char *cpath,bool bAbsolutePath,f
 	searchMode &= ~fsys::SearchFlags::Virtual;
 	searchMode &= ~fsys::SearchFlags::Package;
 	auto path = GetCanonicalizedPath(cpath);
+#ifdef __linux__
+	std::replace(path.begin(),path.end(),'\\','/');
+#endif
 	std::unique_lock lock {g_customMountMutex};
 	for(auto it=m_customMount.begin();it!=m_customMount.end();++it)
 	{
