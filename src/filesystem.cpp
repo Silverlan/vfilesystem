@@ -1129,18 +1129,27 @@ DLLFSYSTEM bool FileManager::IsDir(std::string name,fsys::SearchFlags fsearchmod
 bool FileManager::ExistsSystem(std::string name)
 {
 	name = GetNormalizedPath(name);
+#ifdef __linux__
+	std::replace(name.begin(),name.end(),'\\','/');
+#endif
 	fsys::impl::to_case_sensitive_path(name);
 	return (get_file_flags(name) &FVFILE_INVALID) == 0;
 }
 bool FileManager::IsSystemFile(std::string name)
 {
 	name = GetNormalizedPath(name);
+#ifdef __linux__
+	std::replace(name.begin(),name.end(),'\\','/');
+#endif
 	fsys::impl::to_case_sensitive_path(name);
 	return (get_file_flags(name) &FVFILE_DIRECTORY) == 0;
 }
 bool FileManager::IsSystemDir(std::string name)
 {
 	name = GetNormalizedPath(name);
+#ifdef __linux__
+	std::replace(name.begin(),name.end(),'\\','/');
+#endif
 	fsys::impl::to_case_sensitive_path(name);
 	return (get_file_flags(name) &FVFILE_DIRECTORY) == FVFILE_DIRECTORY;
 }
