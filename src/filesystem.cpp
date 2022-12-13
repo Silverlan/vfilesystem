@@ -519,6 +519,10 @@ bool FileManager::FindAbsolutePath(std::string path,std::string &rpath,fsys::Sea
 			rpath = fpath;
 			if(bAbsolute == false)
 				rpath = appPath +rpath;
+			util::canonicalize_path(rpath);
+#ifdef __linux__
+			std::replace(rpath.begin(),rpath.end(),'\\','/');
+#endif
 			return true;
 		}
 	}
