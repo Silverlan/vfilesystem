@@ -854,7 +854,7 @@ static bool create_path(const std::string &root,const char *path)
 		const char *pSub = subPath.c_str();
 		if(stat(pSub,&st) == -1)
 		{
-			if(mkdir(pSub,0777) != 0)
+			if(!std::filesystem::create_directory(pSub))
 				return false;
 		}
 #else
@@ -881,7 +881,7 @@ DLLFSYSTEM bool FileManager::CreateSystemDirectory(const char *dir)
 	struct stat st = {0};
 	if(stat(pSub,&st) == -1)
 	{
-		if(mkdir(pSub,777) != 0)
+		if(!std::filesystem::create_directory(pSub))
 			return false;
 	}
 #else
