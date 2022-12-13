@@ -1261,7 +1261,7 @@ VFile *VDirectory::GetFile(std::string path)
 	}
 	for(unsigned int i=0;i<m_files.size();i++)
 	{
-		if(m_files[i]->IsFile() && m_files[i]->GetName() == path)
+		if(m_files[i]->IsFile() && ustring::compare(m_files[i]->GetName().c_str(),path.c_str(),false))
 			return static_cast<VFile*>(m_files[i]);
 	}
 	return NULL;
