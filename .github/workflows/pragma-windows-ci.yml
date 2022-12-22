@@ -65,3 +65,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit: ${{ github.ref_name }}
+
+      - name: Handle Error
+        uses: Silverlan/common_actions/action_handle_error@main
+        if: failure()

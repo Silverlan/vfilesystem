@@ -1,20 +1,22 @@
 name: Build
 description: 'Build library'
 inputs:
-  root_dir:
-    description: 'Root directory'
+  repo-directory:
+    description: 'Specifies source code location. If empty, source code will be downloaded to working-directory.'
     required: true
-  should_checkout:
-    description: 'Checkout the core library?'
+    default: ''
+  working-directory:
+    description: 'Working Directory'
     required: true
-    default: '1'
-  dir:
-    description: 'Library directory'
-    required: true
-    default: 'external_libs/vfilesystem'
+    default: '${{ github.workspace }}'
 runs:
   using: "composite"
   steps:
+    - uses: Silverlan/common_actions/action_start@main
+      with:
+        name: "vfilesystem > build"
+        input_values: "repo-directory: ${{inputs.repo-directory}},working-directory: ${{inputs.working-directory}}"
+  
     - name: Initialize Env
       id: init-env
       uses: Silverlan/common_actions/set_common_env_vars@main
@@ -22,29 +24,27 @@ runs:
     - uses: ChristopherHX/conditional@b4a9649204f81002ec9a4ef7d4bf7d6b2ab7fa55
       name: CMake Build
       with:
-        if: ${{inputs.should_checkout == '1'}}
+        if: ${{inputs.repo-directory == ''}}
         step: |
-          uses: Silverlan/common_actions/get_submodule@main
+          uses: Silverlan/common_actions/get_submodule_simple@main
           with:
             repo: 'Silverlan/vfilesystem'
-            repo_name: 'vfilesystem'
             cmake_var: 'DEPENDENCY_VFILESYSTEM_INCLUDE'
-            dir: 'external_libs'
+            working-directory: ${{inputs.working-directory}}
             
     - name: Build submodule - sharedutils
       uses: Silverlan/sharedutils/github_actions/build@master
       with:
-        root_dir: "${{ env.GA_ROOT_DIR }}/external_libs/sharedutils"
+        working-directory: ${{inputs.working-directory}}/sharedutils
         
     - name: Download bzip2
       uses: Silverlan/common_actions/get_submodule@main
       with:
-        dir: 'third_party_libs'
+        working-directory: ${{inputs.working-directory}}
         repo: 'https://github.com/sergiud/bzip2.git'
         repo_name: 'bzip2'
         repo_branch: 'cmake'
         cmake_var: 'DEPENDENCY_BZIP2_INCLUDE'
-        include_dir: '.'
 
     - uses: Silverlan/common_actions/build_cmake@main
       name: CMake Build
@@ -53,6 +53,7 @@ runs:
         build_generator: ${{ matrix.config.generators }}
         cmake_var: 'DEPENDENCY_VFILESYSTEM_LIBRARY'
         build_target: vfilesystem
-        build_dir: '${{ matrix.config.build_dir }}/${{ inputs.dir }}'
-        cmake_script_location: '${{ inputs.dir }}'
+        working-directory: ${{inputs.working-directory}}
         
+    - uses: Silverlan/common_actions/action_end@main
+    

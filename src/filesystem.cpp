@@ -172,6 +172,9 @@ void FileManager::AddCustomMountDirectory(const char *cpath,bool bAbsolutePath,f
 	searchMode &= ~fsys::SearchFlags::Virtual;
 	searchMode &= ~fsys::SearchFlags::Package;
 	auto path = GetCanonicalizedPath(cpath);
+#ifdef __linux__
+	std::replace(path.begin(),path.end(),'\\','/');
+#endif
 	std::unique_lock lock {g_customMountMutex};
 	for(auto it=m_customMount.begin();it!=m_customMount.end();++it)
 	{
@@ -524,6 +527,10 @@ bool FileManager::FindAbsolutePath(std::string path,std::string &rpath,fsys::Sea
 			rpath = fpath;
 			if(bAbsolute == false)
 				rpath = appPath +rpath;
+			util::canonicalize_path(rpath);
+#ifdef __linux__
+			std::replace(rpath.begin(),rpath.end(),'\\','/');
+#endif
 			return true;
 		}
 	}
@@ -855,7 +862,7 @@ static bool create_path(const std::string &root,const char *path)
 		const char *pSub = subPath.c_str();
 		if(stat(pSub,&st) == -1)
 		{
-			if(mkdir(pSub,0777) != 0)
+			if(!std::filesystem::create_directory(pSub))
 				return false;
 		}
 #else
@@ -882,7 +889,7 @@ DLLFSYSTEM bool FileManager::CreateSystemDirectory(const char *dir)
 	struct stat st = {0};
 	if(stat(pSub,&st) == -1)
 	{
-		if(mkdir(pSub,777) != 0)
+		if(!std::filesystem::create_directory(pSub))
 			return false;
 	}
 #else
@@ -1134,18 +1141,27 @@ DLLFSYSTEM bool FileManager::IsDir(std::string name,fsys::SearchFlags fsearchmod
 bool FileManager::ExistsSystem(std::string name)
 {
 	name = GetNormalizedPath(name);
+#ifdef __linux__
+	std::replace(name.begin(),name.end(),'\\','/');
+#endif
 	fsys::impl::to_case_sensitive_path(name);
 	return (get_file_flags(name) &FVFILE_INVALID) == 0;
 }
 bool FileManager::IsSystemFile(std::string name)
 {
 	name = GetNormalizedPath(name);
+#ifdef __linux__
+	std::replace(name.begin(),name.end(),'\\','/');
+#endif
 	fsys::impl::to_case_sensitive_path(name);
 	return (get_file_flags(name) &FVFILE_DIRECTORY) == 0;
 }
 bool FileManager::IsSystemDir(std::string name)
 {
 	name = GetNormalizedPath(name);
+#ifdef __linux__
+	std::replace(name.begin(),name.end(),'\\','/');
+#endif
 	fsys::impl::to_case_sensitive_path(name);
 	return (get_file_flags(name) &FVFILE_DIRECTORY) == FVFILE_DIRECTORY;
 }
@@ -1254,7 +1270,7 @@ VFile *VDirectory::GetFile(std::string path)
 	}
 	for(unsigned int i=0;i<m_files.size();i++)
 	{
-		if(m_files[i]->IsFile() && m_files[i]->GetName() == path)
+		if(m_files[i]->IsFile() && ustring::compare(m_files[i]->GetName().c_str(),path.c_str(),false))
 			return static_cast<VFile*>(m_files[i]);
 	}
 	return NULL;
