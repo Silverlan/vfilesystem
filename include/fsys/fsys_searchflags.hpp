@@ -9,18 +9,8 @@
 #include <mathutil/umath.h>
 #include <cinttypes>
 
-namespace fsys
-{
-	enum class DLLFSYSTEM SearchFlags : uint32_t
-	{
-		None = 0,
-		Virtual = 1,
-		Package = 2,
-		Local = 4,
-		NoMounts = 8,
-		LocalRoot = NoMounts | Local,
-		All = static_cast<uint32_t>(-1) & ~NoMounts
-	};
+namespace fsys {
+	enum class DLLFSYSTEM SearchFlags : uint32_t { None = 0, Virtual = 1, Package = 2, Local = 4, NoMounts = 8, LocalRoot = NoMounts | Local, All = static_cast<uint32_t>(-1) & ~NoMounts };
 };
 REGISTER_BASIC_BITWISE_OPERATORS(fsys::SearchFlags);
 

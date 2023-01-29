@@ -18,41 +18,30 @@
 #include <chrono>
 #include <mathutil/umath.h>
 
-class DLLFSYSTEM DirectoryWatcher
-{
-public:
-	class ConstructException
-		: public std::runtime_error
-	{
-	public:
+class DLLFSYSTEM DirectoryWatcher {
+  public:
+	class ConstructException : public std::runtime_error {
+	  public:
 		using std::runtime_error::runtime_error;
 	};
 
-	enum class WatchFlags : uint8_t
-	{
-		None = 0u,
-		WatchSubDirectories = 1u,
-		AbsolutePath = WatchSubDirectories<<1u,
-		StartDisabled = AbsolutePath<<1u,
-		WatchDirectoryChanges = StartDisabled<<1u
-	};
+	enum class WatchFlags : uint8_t { None = 0u, WatchSubDirectories = 1u, AbsolutePath = WatchSubDirectories << 1u, StartDisabled = AbsolutePath << 1u, WatchDirectoryChanges = StartDisabled << 1u };
 
-	DirectoryWatcher(const std::string &path,WatchFlags flags=WatchFlags::None);
+	DirectoryWatcher(const std::string &path, WatchFlags flags = WatchFlags::None);
 	virtual ~DirectoryWatcher();
 	uint32_t Poll();
-	const std::string &GetPath() const {return m_path;}
+	const std::string &GetPath() const { return m_path; }
 
 	void SetEnabled(bool enabled);
 	bool IsEnabled() const;
-protected:
-	virtual void OnFileModified(const std::string &fName)=0;
-private:
+  protected:
+	virtual void OnFileModified(const std::string &fName) = 0;
+  private:
 	std::thread m_thread;
 	std::atomic<bool> m_bRunning;
 	std::atomic<bool> m_enabled = true;
 	std::string m_path;
-	struct FileEvent
-	{
+	struct FileEvent {
 		FileEvent(const std::string &fName);
 		std::string fileName;
 		std::chrono::high_resolution_clock::time_point time;
@@ -65,15 +54,13 @@ private:
 };
 REGISTER_BASIC_BITWISE_OPERATORS(DirectoryWatcher::WatchFlags);
 
-class DLLFSYSTEM DirectoryWatcherCallback
-	: public DirectoryWatcher
-{
-protected:
-	std::function<void(const std::string&)> m_onFileModified;
+class DLLFSYSTEM DirectoryWatcherCallback : public DirectoryWatcher {
+  protected:
+	std::function<void(const std::string &)> m_onFileModified;
 	virtual void OnFileModified(const std::string &fName) override;
-public:
-	DirectoryWatcherCallback(const std::string &path,const std::function<void(const std::string&)> &onFileModified,WatchFlags flags=WatchFlags::None);
+  public:
+	DirectoryWatcherCallback(const std::string &path, const std::function<void(const std::string &)> &onFileModified, WatchFlags flags = WatchFlags::None);
 };
-DLLFSYSTEM std::ostream &operator<<(std::ostream &out,const DirectoryWatcherCallback &o);
+DLLFSYSTEM std::ostream &operator<<(std::ostream &out, const DirectoryWatcherCallback &o);
 
 #endif

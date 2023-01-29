@@ -5,30 +5,22 @@
 #include "fsys/filesystem.h"
 #include <iostream>
 #ifndef __linux__
-	#include <Windows.h>
+#include <Windows.h>
 #endif
 
 #define COMPILE_EXECUTABLE 0
 
 #if COMPILE_EXECUTABLE == 0
 #ifdef __linux__
-class InitAndRelease
-{
-public:
-	InitAndRelease()
-	{
-
-	}
-	~InitAndRelease()
-	{
-		FileManager::Close();
-	}
+class InitAndRelease {
+  public:
+	InitAndRelease() {}
+	~InitAndRelease() { FileManager::Close(); }
 } initAndRelease __attribute__((visibility("default")));
 #else
-BOOLEAN WINAPI DllMain(IN HINSTANCE,IN DWORD nReason,IN LPVOID)
+BOOLEAN WINAPI DllMain(IN HINSTANCE, IN DWORD nReason, IN LPVOID)
 {
-	switch(nReason)
-	{
+	switch(nReason) {
 	case DLL_PROCESS_ATTACH:
 		break;
 	case DLL_THREAD_ATTACH:

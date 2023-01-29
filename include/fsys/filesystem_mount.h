@@ -9,27 +9,25 @@
 #include <vector>
 #include <fsys/filesystem.h>
 
-struct MountDirectory
-{
-	MountDirectory(const std::string &dir,bool absolutePath,fsys::SearchFlags search);
+struct MountDirectory {
+	MountDirectory(const std::string &dir, bool absolutePath, fsys::SearchFlags search);
 	std::string directory;
 	fsys::SearchFlags searchMode;
 	bool absolutePath;
 };
 
 class FileManager;
-class MountIterator
-{
-public:
+class MountIterator {
+  public:
 	friend FileManager;
-private:
+  private:
 	std::vector<MountDirectory> *m_directories;
 	size_t m_index;
-protected:
+  protected:
 	MountIterator(std::vector<MountDirectory> &directories);
 	void operator++();
 	bool IsValid();
-	bool GetNextDirectory(std::string &outDir,fsys::SearchFlags includeFlags,fsys::SearchFlags excludeFlags,bool &bAbsolute);
+	bool GetNextDirectory(std::string &outDir, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags, bool &bAbsolute);
 };
 
 #endif

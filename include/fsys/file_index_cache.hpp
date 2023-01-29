@@ -13,20 +13,16 @@
 #include <condition_variable>
 #include <sharedutils/ctpl_stl.h>
 
-namespace fsys
-{
-	class DLLFSYSTEM FileIndexCache
-	{
-	public:
-		enum class Type : uint8_t
-		{
+namespace fsys {
+	class DLLFSYSTEM FileIndexCache {
+	  public:
+		enum class Type : uint8_t {
 			File = 0,
 			Directory,
 
 			Invalid = std::numeric_limits<uint8_t>::max()
 		};
-		struct ItemInfo
-		{
+		struct ItemInfo {
 			Type type;
 		};
 		FileIndexCache();
@@ -39,17 +35,17 @@ namespace fsys
 		std::optional<ItemInfo> FindItemInfo(std::string path) const;
 		Type FindFileType(std::string path) const;
 		bool Exists(std::string path) const;
-		void Add(const std::string_view &path,Type type);
+		void Add(const std::string_view &path, Type type);
 		void Remove(const std::string_view &path);
-	private:
+	  private:
 		void NormalizePath(std::string &path) const;
-		unsigned long Hash(const std::string_view &key,bool isAbsolutePath) const;
-		void QueuePath(size_t rootLen,const std::filesystem::directory_entry &path);
-		void IterateFiles(size_t rootLen,const std::filesystem::directory_entry &path);
+		unsigned long Hash(const std::string_view &key, bool isAbsolutePath) const;
+		void QueuePath(size_t rootLen, const std::filesystem::directory_entry &path);
+		void IterateFiles(size_t rootLen, const std::filesystem::directory_entry &path);
 		void DecrementPending();
 
 		mutable std::mutex m_cacheMutex;
-		std::unordered_map<size_t,ItemInfo> m_indexCache;
+		std::unordered_map<size_t, ItemInfo> m_indexCache;
 		std::condition_variable m_taskCompleteCondition;
 		std::mutex m_taskCompletedMutex;
 
