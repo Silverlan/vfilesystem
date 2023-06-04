@@ -7,6 +7,7 @@
 #include "fsys_shared.h"
 #include "fsys_definitions.hpp"
 #include <mathutil/umath.h>
+#include <sharedutils/util_file.h>
 #include <optional>
 #include <memory>
 
@@ -259,6 +260,22 @@ namespace filemanager {
 	DLLFSYSTEM fsys::PackageManager *get_package_manager(const std::string_view &name);
 
 	DLLFSYSTEM bool compare_path(const std::string_view &a, const std::string_view &b);
+
+	template<typename TList>
+	std::optional<std::string> find_available_file(const std::string &fileName, const TList &exts)
+	{
+		if(exists(fileName))
+			return fileName;
+		auto ext = ufile::get_file_extension(fileName, exts);
+		if(ext)
+			return {};
+		for(auto &ext : exts) {
+			auto nFileName = fileName + '.' + ext;
+			if(exists(nFileName))
+				return nFileName;
+		}
+		return {};
+	}
 };
 REGISTER_BASIC_BITWISE_OPERATORS(filemanager::FileMode)
 
