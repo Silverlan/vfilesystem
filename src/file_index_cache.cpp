@@ -4,11 +4,12 @@
 
 #include "fsys/file_index_cache.hpp"
 #include <sharedutils/util.h>
+#include <sharedutils/util_string.h>
 
 static bool path_to_string(const std::filesystem::path &path, std::string &str)
 {
 	try {
-		str = path.string();
+		str = ustring::wstring_to_string(path.wstring());
 		return true;
 	}
 	catch(const std::exception &err) {
