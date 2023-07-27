@@ -4,6 +4,7 @@
 
 #include "fsys/filesystem.h"
 #include "fcaseopen.h"
+#include <sharedutils/util_string.h>
 #include <cstring>
 
 VData::VData(std::string name) { m_name = name; }
@@ -348,7 +349,15 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode)
 {
 	std::string sPath = path;
 	std::replace(sPath.begin(), sPath.end(), '\\', '/');
+#ifdef _WIN32
+	auto wpath = ustring::string_to_wstring(path);
+	auto wmode = ustring::string_to_wstring(mode);
+	m_file = nullptr;
+	_wfopen_s(&m_file, wpath.data(), wmode.data());
+#else
 	m_file = fcaseopen(sPath.c_str(), mode);
+#endif
+
 	if(m_file == NULL)
 		return false;
 	m_path = sPath.c_str();
@@ -363,7 +372,9 @@ unsigned long long VFilePtrInternalReal::GetSize() { return m_size; }
 bool VFilePtrInternalReal::ReOpen(const char *mode)
 {
 #ifdef _WIN32
-	freopen_s(&m_file, m_path.c_str(), mode, m_file);
+	auto wpath = ustring::string_to_wstring(m_path);
+	auto wmode = ustring::string_to_wstring(mode);
+	_wfreopen_s(&m_file, wpath.data(), wmode.data(), m_file);
 #else
 	m_file = freopen(m_path.c_str(), mode, m_file);
 #endif
