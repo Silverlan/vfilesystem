@@ -95,7 +95,7 @@ static unsigned long long update_file_insensitive_path_components_and_get_flags(
 		name = fullPath.substr(offset, name.length());
 		return get_file_flags(fullPath);
 	}
-	auto fullPath = mountPath + "\\" + name;
+	auto fullPath = mountPath + DIR_SEPARATOR + name;
 	fsys::impl::to_case_sensitive_path(fullPath);
 	auto offset = 0ull;
 	mountPath = fullPath.substr(offset, mountPath.length());
@@ -178,8 +178,14 @@ void FileManager::AddCustomMountDirectory(const char *cpath, bool bAbsolutePath,
 		}
 	}
 	auto *cache = filemanager::get_file_index_cache();
-	if(cache)
-		cache->QueuePath((bAbsolutePath ? "" : (filemanager::get_root_path() + '/')) + path);
+	if(cache) {
+		//Before we actually request to cache all entries, nativize the file entry.
+		auto cachedPath = bAbsolutePath ? "" : (filemanager::get_root_path() + '/') + path;
+		//cachedPath.make_preferred();
+		std::replace(cachedPath.begin(), cachedPath.end(), DIR_SEPARATOR_OTHER, DIR_SEPARATOR);
+		cache->QueuePath(cachedPath);
+	}
+
 	m_customMount.push_back(MountDirectory(path, bAbsolutePath, searchMode));
 }
 
@@ -193,7 +199,8 @@ DLLFSYSTEM void FileManager::ClearCustomMountDirectories()
 
 DLLFSYSTEM std::pair<VDirectory *, VFile *> FileManager::AddVirtualFile(std::string path, const std::shared_ptr<std::vector<uint8_t>> &data)
 {
-	std::replace(path.begin(), path.end(), '/', '\\');
+	std::replace(path.begin(), path.end(), DIR_SEPARATOR_OTHER, DIR_SEPARATOR);
+
 	NormalizePath(path);
 	unsigned int cur = 0;
 	std::string sub;
@@ -228,7 +235,7 @@ DLLFSYSTEM void FileManager::SetAbsoluteRootPath(const std::string &path)
 	m_rootPath = nullptr;
 	if(!path.empty()) {
 		auto rootPath = GetCanonicalizedPath(path);
-		if(rootPath.back() == '\\')
+		if(rootPath.back() == DIR_SEPARATOR)
 			rootPath = rootPath.substr(0, rootPath.size() - 1);
 		m_rootPath = std::unique_ptr<std::string>(new std::string(rootPath));
 	}
@@ -236,7 +243,7 @@ DLLFSYSTEM void FileManager::SetAbsoluteRootPath(const std::string &path)
 DLLFSYSTEM void FileManager::SetRootPath(const std::string &path)
 {
 	auto r = GetProgramPath();
-	r += '\\';
+	r += DIR_SEPARATOR;
 	r += path;
 	SetAbsoluteRootPath(r);
 }
@@ -314,7 +321,7 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath, const char *mode, f
 	{
 		if((includeFlags & fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 			return NULL;
-		std::string appPath = GetRootPath() + "\\";
+		std::string appPath = GetRootPath() + DIR_SEPARATOR;
 		std::string fpath = appPath + path;
 		auto ptrReal = std::make_shared<VFilePtrInternalReal>();
 		if(ptrReal->Construct(fpath.c_str(), mode)) {
@@ -349,7 +356,7 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath, const char *mode, f
 	if((includeFlags & fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return NULL;
 
-	std::string appPath = GetRootPath() + "\\";
+	std::string appPath = GetRootPath() + DIR_SEPARATOR;
 	std::string fpath;
 	bool bFound = false;
 	bool bAbsolute = false;
@@ -358,7 +365,7 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath, const char *mode, f
 		MountIterator it(m_customMount);
 		std::string mountPath;
 		while(bFound == false && it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
-			fpath = GetNormalizedPath(mountPath + "\\" + path);
+			fpath = GetNormalizedPath(mountPath + DIR_SEPARATOR + path);
 			auto rootPath = (bAbsolute == false) ? appPath : "";
 			bFound = ((update_file_insensitive_path_components_and_get_flags(rootPath, mountPath, path) & FVFILE_INVALID) == 0) ? true : false;
 		}
@@ -429,7 +436,7 @@ static bool remove_directory(const std::string &rootPath, const char *cdir, cons
 {
 	std::string dir = FileManager::GetCanonicalizedPath(cdir);
 	std::string dirSub = dir;
-	dirSub += '\\';
+	dirSub += DIR_SEPARATOR;
 	std::string dirSearch = dirSub;
 	dirSearch += '*';
 	std::vector<std::string> files;
@@ -493,10 +500,10 @@ bool FileManager::FindAbsolutePath(std::string path, std::string &rpath, fsys::S
 	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
-	std::string appPath = GetRootPath() + "\\";
+	std::string appPath = GetRootPath() + DIR_SEPARATOR;
 	auto bAbsolute = false;
 	while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
-		auto fpath = GetNormalizedPath(mountPath + "\\" + path);
+		auto fpath = GetNormalizedPath(mountPath + DIR_SEPARATOR + path);
 		fsys::impl::to_case_sensitive_path(fpath);
 		auto rootPath = bAbsolute ? "" : appPath;
 		if((update_file_insensitive_path_components_and_get_flags(rootPath, mountPath, path) & FVFILE_INVALID) == 0) {
@@ -626,7 +633,7 @@ static void get_find_string(const char *cfind, std::string &path, std::string &t
 {
 	std::string find = cfind;
 	NormalizePath(find);
-	lbr = find.rfind('\\');
+	lbr = find.rfind(DIR_SEPARATOR);
 	if(lbr == ustring::NOT_FOUND) {
 		target = find;
 		path = "";
@@ -634,7 +641,7 @@ static void get_find_string(const char *cfind, std::string &path, std::string &t
 	else {
 		target = find.substr(lbr + 1);
 		path = find.substr(0, lbr);
-		path += '\\';
+		path += DIR_SEPARATOR;
 	}
 }
 
@@ -704,7 +711,7 @@ DLLFSYSTEM void FileManager::FindSystemFiles(const char *path, std::vector<std::
 	std::string target;
 	size_t lbr;
 	get_find_string(path, npath, target, lbr);
-	find_files(path, target, "", resfiles, resdirs, bKeepPath);
+	find_files(npath, target, "", resfiles, resdirs, bKeepPath);
 }
 
 #ifdef __linux__
@@ -764,7 +771,7 @@ static std::string normalizePath(std::string &path)
 DLLFSYSTEM std::string FileManager::GetCanonicalizedPath(std::string path)
 {
 	util::canonicalize_path(path);
-	std::replace(path.begin(), path.end(), '/', '\\');
+	std::replace(path.begin(), path.end(), DIR_SEPARATOR_OTHER, DIR_SEPARATOR);
 	return path;
 }
 
@@ -773,8 +780,8 @@ DLLFSYSTEM std::string FileManager::GetSubPath(const std::string &root, std::str
 	path = GetCanonicalizedPath(path);
 	if(path.empty())
 		return path;
-	if(path[0] != '\\')
-		path = '\\' + path;
+	if(path[0] != DIR_SEPARATOR)
+		path = DIR_SEPARATOR + path;
 	return root + path;
 }
 
@@ -786,7 +793,7 @@ static bool create_path(const std::string &root, const char *path)
 	p = FileManager::GetCanonicalizedPath(p);
 	size_t pos = 0;
 	do {
-		pos = p.find_first_of('\\', pos + 1);
+		pos = p.find_first_of(DIR_SEPARATOR, pos + 1);
 #ifdef __linux__
 		struct stat st = {0};
 		std::string subPath = FileManager::GetSubPath(p.substr(0, pos));
@@ -975,15 +982,15 @@ unsigned long long get_file_attributes(const std::string &fpath)
 DLLFSYSTEM std::uint64_t FileManager::GetFileAttributes(std::string name)
 {
 	NormalizePath(name);
-	std::string appPath = GetRootPath() + "\\";
+	std::string appPath = GetRootPath() + DIR_SEPARATOR;
 	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	bool bAbsolute = false;
 	while(it.GetNextDirectory(mountPath, fsys::SearchFlags::Local, fsys::SearchFlags::None, bAbsolute)) {
-		std::string fpath = mountPath + "\\" + name;
+		std::string fpath = mountPath + DIR_SEPARATOR + name;
 		if(bAbsolute == false)
-			fpath = appPath + "\\" + fpath;
+			fpath = appPath + DIR_SEPARATOR + fpath;
 		auto attrs = get_file_attributes(fpath);
 		if(attrs != INVALID_FILE_ATTRIBUTES)
 			return attrs;
@@ -1026,7 +1033,7 @@ DLLFSYSTEM std::uint64_t FileManager::GetFileFlags(std::string name, fsys::Searc
 		return flags;
 	}
 
-	std::string appPath = GetRootPath() + "\\";
+	std::string appPath = GetRootPath() + DIR_SEPARATOR;
 	std::unique_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
@@ -1130,10 +1137,10 @@ DLLFSYSTEM bool FileManager::MoveFile(const char *cfile, const char *cfNewPath)
 	if(IsFile(cfile, fsys::SearchFlags::Local) == true) // It's a local file, just use the os' move functions
 	{
 		std::string root = GetRootPath();
-		auto in = root + '\\';
+		auto in = root + DIR_SEPARATOR;
 		in += GetNormalizedPath(cfile);
 
-		auto out = root + '\\';
+		auto out = root + DIR_SEPARATOR;
 		out += GetNormalizedPath(cfNewPath);
 #ifdef _WIN32
 		auto r = MoveFileW(ustring::string_to_wstring(in).c_str(), ustring::string_to_wstring(out).c_str());
@@ -1162,6 +1169,7 @@ bool FileManager::ComparePath(const std::string &a, const std::string &b)
 
 VFile *VDirectory::GetFile(std::string path)
 {
+	ustring::to_lower(path);
 	NormalizePath(path);
 	size_t sp = path.find_first_of("/\\");
 	if(sp != ustring::NOT_FOUND) {
@@ -1182,7 +1190,7 @@ VFile *VDirectory::GetFile(std::string path)
 VDirectory *VDirectory::GetDirectory(std::string path)
 {
 	NormalizePath(path);
-	if(!path.empty() && path.back() == '\\')
+	if(!path.empty() && path.back() == DIR_SEPARATOR)
 		path = path.substr(0, path.length() - 1);
 	size_t sp = path.find_first_of("/\\");
 	if(sp != ustring::NOT_FOUND) {

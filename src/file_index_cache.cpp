@@ -4,12 +4,18 @@
 
 #include "fsys/file_index_cache.hpp"
 #include <sharedutils/util.h>
+#include <sharedutils/magic_enum.hpp>
 #include <sharedutils/util_string.h>
 
 static bool path_to_string(const std::filesystem::path &path, std::string &str)
 {
 	try {
+#ifdef _WIN32
+
 		str = ustring::wstring_to_string(path.wstring());
+#else
+		str = path.string();
+#endif
 		return true;
 	}
 	catch(const std::exception &err) {

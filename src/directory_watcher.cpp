@@ -88,6 +88,7 @@ DirectoryWatcher::DirectoryWatcher(const std::string &path, WatchFlags flags) : 
 	relPath.MakeRelative(util::get_program_path());
 	util::set_thread_name(m_thread, "dir_watch_" + relPath.GetString());
 #else
+    //TODO: play araund the inotify api
 	throw ConstructException("Only supported on Windows systems");
 #endif
 }
