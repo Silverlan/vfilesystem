@@ -494,30 +494,46 @@ bool FileManager::RenameSystemFile(const char *file, const char *fNewName) { ret
 
 DLLFSYSTEM bool FileManager::RenameFile(const char *file, const char *fNewName) { return rename_file(GetRootPath() + '\\', file, fNewName); }
 
-bool FileManager::FindAbsolutePath(std::string path, std::string &rpath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
+std::vector<std::string> FileManager::FindAbsolutePaths(std::string path, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags, bool exitEarly)
 {
 	NormalizePath(path);
 	std::unique_lock lock {g_customMountMutex};
-	MountIterator it(m_customMount);
+	MountIterator it(FileManager::m_customMount);
 	std::string mountPath;
 	std::string appPath = GetRootPath() + DIR_SEPARATOR;
 	auto bAbsolute = false;
+	std::vector<std::string> paths;
 	while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
 		auto fpath = GetNormalizedPath(mountPath + DIR_SEPARATOR + path);
 		fsys::impl::to_case_sensitive_path(fpath);
 		auto rootPath = bAbsolute ? "" : appPath;
 		if((update_file_insensitive_path_components_and_get_flags(rootPath, mountPath, path) & FVFILE_INVALID) == 0) {
-			rpath = fpath;
+			std::string rpath = fpath;
 			if(bAbsolute == false)
 				rpath = appPath + rpath;
 			util::canonicalize_path(rpath);
 #ifdef __linux__
 			std::replace(rpath.begin(), rpath.end(), '\\', '/');
 #endif
-			return true;
+			if(paths.size() == paths.capacity())
+				paths.reserve(paths.size() * 2 + 5);
+			paths.push_back(std::move(rpath));
+			if(exitEarly)
+				break;
 		}
 	}
-	return false;
+	return paths;
+}
+
+std::vector<std::string> FileManager::FindAbsolutePaths(std::string path, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FindAbsolutePaths(path, includeFlags, excludeFlags, false); }
+
+bool FileManager::FindAbsolutePath(std::string path, std::string &rpath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
+{
+	auto paths = FindAbsolutePaths(path, includeFlags, excludeFlags, true);
+	if(paths.empty())
+		return false;
+	rpath = std::move(paths.front());
+	return true;
 }
 
 bool FileManager::AbsolutePathToCustomMountPath(const std::string &strPath, std::string &outMountPath, std::string &relativePath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)

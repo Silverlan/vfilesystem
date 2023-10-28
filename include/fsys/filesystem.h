@@ -287,6 +287,7 @@ class DLLFSYSTEM FileManager {
 	static std::unique_ptr<std::string> m_rootPath;
 	static std::function<VFilePtr(const std::string &, const char *mode)> m_customFileHandler;
 	static VData *GetVirtualData(std::string path);
+	static std::vector<std::string> FindAbsolutePaths(std::string path, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags, bool exitEarly);
   public:
 	static bool IsWriteMode(const char *mode);
 	static bool IsBinaryMode(const char *mode);
@@ -345,6 +346,7 @@ class DLLFSYSTEM FileManager {
 	// Note: This will not include custom mounts that are located outside of the program location
 	static bool FindLocalPath(std::string path, std::string &rpath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	static bool FindAbsolutePath(std::string path, std::string &rpath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
+	static std::vector<std::string> FindAbsolutePaths(std::string path, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	static bool AbsolutePathToCustomMountPath(const std::string &path, std::string &outMountPath, std::string &relativePath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	static char GetDirectorySeparator();
 	static bool RemoveSystemFile(const char *file);
