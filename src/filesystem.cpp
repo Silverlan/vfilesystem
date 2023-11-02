@@ -1045,6 +1045,8 @@ DLLFSYSTEM std::uint64_t FileManager::GetFileFlags(std::string name, fsys::Searc
 		case fsys::FileIndexCache::Type::Directory:
 			flags |= FVFILE_DIRECTORY;
 			break;
+		case fsys::FileIndexCache::Type::Invalid:
+			return FVFILE_INVALID;
 		}
 		return flags;
 	}
