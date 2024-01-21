@@ -30,6 +30,7 @@ extern "C" {
 #include "impl_fsys_util.hpp"
 #include <array>
 #include <mutex>
+#include <shared_mutex>
 #include <iostream>
 
 #pragma optimize("", off)
@@ -130,9 +131,9 @@ decltype(FileManager::m_customMount) FileManager::m_customMount;
 decltype(FileManager::m_rootPath) FileManager::m_rootPath;
 decltype(FileManager::m_customFileHandler) FileManager::m_customFileHandler = nullptr;
 
-static std::mutex g_customMountMutex {};
+static std::shared_mutex g_customMountMutex {};
 static std::mutex g_packageMutex {};
-static std::mutex g_rootPathMutex {};
+static std::shared_mutex g_rootPathMutex {};
 
 void FileManager::SetCustomFileHandler(const std::function<VFilePtr(const std::string &, const char *mode)> &fHandler) { m_customFileHandler = fHandler; }
 
@@ -224,7 +225,7 @@ DLLFSYSTEM std::pair<VDirectory *, VFile *> FileManager::AddVirtualFile(std::str
 DLLFSYSTEM VDirectory *FileManager::GetRootDirectory() { return &m_vroot; }
 DLLFSYSTEM std::string FileManager::GetRootPath()
 {
-	std::unique_lock lock {g_rootPathMutex};
+	std::shared_lock lock {g_rootPathMutex};
 	if(m_rootPath == nullptr)
 		return GetProgramPath();
 	return *m_rootPath.get();
@@ -361,7 +362,7 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath, const char *mode, f
 	bool bFound = false;
 	bool bAbsolute = false;
 	if((includeFlags & fsys::SearchFlags::NoMounts) == fsys::SearchFlags::None) {
-		std::unique_lock lock {g_customMountMutex};
+		std::shared_lock lock {g_customMountMutex};
 		MountIterator it(m_customMount);
 		std::string mountPath;
 		while(bFound == false && it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
@@ -497,7 +498,7 @@ DLLFSYSTEM bool FileManager::RenameFile(const char *file, const char *fNewName) 
 std::vector<std::string> FileManager::FindAbsolutePaths(std::string path, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags, bool exitEarly)
 {
 	NormalizePath(path);
-	std::unique_lock lock {g_customMountMutex};
+	std::shared_lock lock {g_customMountMutex};
 	MountIterator it(FileManager::m_customMount);
 	std::string mountPath;
 	std::string appPath = GetRootPath() + DIR_SEPARATOR;
@@ -538,7 +539,7 @@ bool FileManager::FindAbsolutePath(std::string path, std::string &rpath, fsys::S
 
 bool FileManager::AbsolutePathToCustomMountPath(const std::string &strPath, std::string &outMountPath, std::string &relativePath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
 {
-	std::unique_lock lock {g_customMountMutex};
+	std::shared_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	util::Path path {strPath};
@@ -558,7 +559,7 @@ bool FileManager::AbsolutePathToCustomMountPath(const std::string &strPath, std:
 bool FileManager::FindLocalPath(std::string path, std::string &rpath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
 {
 	NormalizePath(path);
-	std::unique_lock lock {g_customMountMutex};
+	std::shared_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	std::string appPath = GetRootPath() + "\\";
@@ -705,7 +706,7 @@ DLLFSYSTEM void FileManager::FindFiles(const char *cfind, std::vector<std::strin
 		return;
 	std::string localPath = path;
 	std::string appPath = GetRootPath();
-	std::unique_lock lock {g_customMountMutex};
+	std::shared_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	bool bAbsolute = false;
@@ -965,7 +966,7 @@ DLLFSYSTEM bool FileManager::Exists(std::string name, fsys::SearchFlags includeF
 		return fic->Exists(name);
 
 	std::string appPath = GetRootPath();
-	std::unique_lock lock {g_customMountMutex};
+	std::shared_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	bool bAbsolute = false;
@@ -999,7 +1000,7 @@ DLLFSYSTEM std::uint64_t FileManager::GetFileAttributes(std::string name)
 {
 	NormalizePath(name);
 	std::string appPath = GetRootPath() + DIR_SEPARATOR;
-	std::unique_lock lock {g_customMountMutex};
+	std::shared_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	bool bAbsolute = false;
@@ -1052,7 +1053,7 @@ DLLFSYSTEM std::uint64_t FileManager::GetFileFlags(std::string name, fsys::Searc
 	}
 
 	std::string appPath = GetRootPath() + DIR_SEPARATOR;
-	std::unique_lock lock {g_customMountMutex};
+	std::shared_lock lock {g_customMountMutex};
 	MountIterator it(m_customMount);
 	std::string mountPath;
 	bool bAbsolute = false;
