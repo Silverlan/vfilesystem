@@ -246,8 +246,8 @@ namespace filemanager {
 	DLLFSYSTEM void set_root_path(const std::string_view &path);
 	DLLFSYSTEM std::string get_root_path();
 
-	DLLFSYSTEM bool find_local_path(const std::string_view &path, const std::string_view &rpath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
-	DLLFSYSTEM bool find_absolute_path(const std::string_view &path, const std::string_view &rpath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
+	DLLFSYSTEM bool find_local_path(const std::string_view &path, std::string &rpath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
+	DLLFSYSTEM bool find_absolute_path(const std::string_view &path, std::string &rpath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	DLLFSYSTEM char get_directory_separator();
 	DLLFSYSTEM bool remove_system_file(const std::string_view &file);
 	DLLFSYSTEM bool remove_system_directory(const std::string_view &dir);

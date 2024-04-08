@@ -189,16 +189,8 @@ void filemanager::set_absolute_root_path(const std::string_view &path) { return 
 void filemanager::set_root_path(const std::string_view &path) { return FileManager::SetRootPath(std::string {path}); }
 std::string filemanager::get_root_path() { return FileManager::GetRootPath(); }
 
-bool filemanager::find_local_path(const std::string_view &path, const std::string_view &rpath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
-{
-	std::string spath {rpath};
-	return FileManager::FindLocalPath(std::string {path}, spath, includeFlags, excludeFlags);
-}
-bool filemanager::find_absolute_path(const std::string_view &path, const std::string_view &rpath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
-{
-	std::string spath {rpath};
-	return FileManager::FindAbsolutePath(std::string {path}, spath, includeFlags, excludeFlags);
-}
+bool filemanager::find_local_path(const std::string_view &path, std::string &rpath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FileManager::FindLocalPath(std::string {path}, rpath, includeFlags, excludeFlags); }
+bool filemanager::find_absolute_path(const std::string_view &path, std::string &rpath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FileManager::FindAbsolutePath(std::string {path}, rpath, includeFlags, excludeFlags); }
 char filemanager::get_directory_separator() { return FileManager::GetDirectorySeparator(); }
 bool filemanager::remove_system_file(const std::string_view &file) { return FileManager::RemoveSystemFile(file.data()); }
 bool filemanager::remove_system_directory(const std::string_view &dir) { return FileManager::RemoveSystemDirectory(dir.data()); }
