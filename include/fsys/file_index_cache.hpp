@@ -39,7 +39,7 @@ namespace fsys {
 		void Remove(const std::string_view &path);
 	  private:
 		void NormalizePath(std::string &path) const;
-		unsigned long Hash(const std::string_view &key, bool isAbsolutePath) const;
+		size_t Hash(const std::string_view &key, bool isAbsolutePath) const;
 		void QueuePath(size_t rootLen, const std::filesystem::directory_entry &path);
 		void IterateFiles(size_t rootLen, const std::filesystem::directory_entry &path);
 		void DecrementPending();

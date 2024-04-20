@@ -24,10 +24,10 @@ static bool path_to_string(const std::filesystem::path &path, std::string &str)
 	}
 	return false;
 }
-unsigned long fsys::FileIndexCache::Hash(const std::string_view &key, bool isAbsolutePath) const
+size_t fsys::FileIndexCache::Hash(const std::string_view &key, bool isAbsolutePath) const
 {
 	// djb2 hash
-	unsigned long hash = 5381;
+	size_t hash = 5381;
 	auto len = key.length();
 	auto offset = isAbsolutePath ? m_rootPath.length() : 0;
 	for(auto i = offset; i < key.length(); ++i) {
@@ -41,7 +41,7 @@ unsigned long fsys::FileIndexCache::Hash(const std::string_view &key, bool isAbs
 		}
 		c = std::tolower(static_cast<unsigned char>(c));
 
-		hash = 33 * hash + c;
+		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 	}
 	return hash;
 }
