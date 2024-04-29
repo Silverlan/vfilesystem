@@ -65,11 +65,10 @@ DirectoryWatcher::DirectoryWatcher(const std::string &path, WatchFlags flags) : 
 					if(m_enabled) {
 						std::wstring wstr = pInfo->FileName;
 						std::string str(wstr.begin(), wstr.begin() + (pInfo->FileNameLength / sizeof(FILE_NOTIFY_INFORMATION::FileName[0])));
-						m_fileMutex.lock();
+						std::unique_lock lock {m_fileMutex};
 						auto it = std::find_if(m_fileStack.begin(), m_fileStack.end(), [&str](const FileEvent &ev) { return (ev.fileName == str) ? true : false; });
 						if(it == m_fileStack.end())
 							m_fileStack.push_back({str});
-						m_fileMutex.unlock();
 					}
 					break;
 				}
@@ -88,7 +87,7 @@ DirectoryWatcher::DirectoryWatcher(const std::string &path, WatchFlags flags) : 
 	relPath.MakeRelative(util::get_program_path());
 	util::set_thread_name(m_thread, "dir_watch_" + relPath.GetString());
 #else
-    //TODO: play araund the inotify api
+	//TODO: play araund the inotify api
 	throw ConstructException("Only supported on Windows systems");
 #endif
 }
@@ -108,7 +107,7 @@ uint32_t DirectoryWatcher::Poll()
 {
 	uint32_t numChanged = 0;
 #ifdef _WIN32
-	m_fileMutex.lock();
+	std::unique_lock lock {m_fileMutex};
 	if(!m_fileStack.empty()) {
 		auto t = std::chrono::high_resolution_clock::now();
 		for(auto it = m_fileStack.begin(); it != m_fileStack.end();) {
@@ -124,7 +123,6 @@ uint32_t DirectoryWatcher::Poll()
 				++it;
 		}
 	}
-	m_fileMutex.unlock();
 #endif
 	return numChanged;
 }

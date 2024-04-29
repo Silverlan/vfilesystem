@@ -34,6 +34,16 @@ extern "C" {
 #include <iostream>
 
 #pragma optimize("", off)
+std::optional<std::wstring> string_to_wstring(const std::string &str) {
+	try {
+		return ustring::string_to_wstring(str);
+	}
+	catch(const std::runtime_error &err) {
+		return {};
+	}
+	return {};
+}
+
 static unsigned long long get_file_flags(const std::string &fpath)
 {
 #ifdef __linux__
@@ -48,7 +58,10 @@ static unsigned long long get_file_flags(const std::string &fpath)
 		return flags;
 	}
 #else
-	unsigned long long attr = GetFileAttributesW(ustring::string_to_wstring(fpath).c_str());
+	auto wstr = string_to_wstring(fpath);
+	if(!wstr)
+		return INVALID_FILE_ATTRIBUTES;
+	unsigned long long attr = GetFileAttributesW(wstr->c_str());
 	if(attr != INVALID_FILE_ATTRIBUTES) {
 		unsigned int flags = 0;
 		if((attr & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY)
@@ -413,8 +426,10 @@ bool FileManager::RemoveSystemFile(const char *file)
 	std::string path = GetCanonicalizedPath(file);
 	std::replace(path.begin(), path.end(), '\\', '/');
 #ifdef _WIN32
-	auto wpath = ustring::string_to_wstring(path);
-	if(_wremove(wpath.data()) == 0) {
+	auto wpath = string_to_wstring(path);
+	if(!wpath)
+		return false;
+	if(_wremove(wpath->data()) == 0) {
 #else
 	if(remove(path.c_str()) == 0) {
 #endif
@@ -449,8 +464,10 @@ static bool remove_directory(const std::string &rootPath, const char *cdir, cons
 		fRemoveFile((dirSub + *it).c_str());
 	std::string p = rootPath + dir;
 #ifdef _WIN32
-	auto wp = ustring::string_to_wstring(p);
-	auto r = ::RemoveDirectoryW(wp.c_str());
+	auto wp = string_to_wstring(p);
+	if(!wp)
+		return false;
+	auto r = ::RemoveDirectoryW(wp->c_str());
 	if(r != 0)
 		filemanager::update_file_index_cache(p, true);
 	return (r != 0) ? true : false;
@@ -478,9 +495,11 @@ static bool rename_file(const std::string &root, const std::string &file, const 
 	std::replace(pathNew.begin(), pathNew.end(), '\\', '/');
 	fsys::impl::to_case_sensitive_path(path);
 #ifdef _WIN32
-	auto wpath = ustring::string_to_wstring(path);
-	auto wpathNew = ustring::string_to_wstring(pathNew);
-	if(_wrename(wpath.c_str(), wpathNew.c_str()) == 0) {
+	auto wpath = string_to_wstring(path);
+	auto wpathNew = string_to_wstring(pathNew);
+	if(!wpath || !wpathNew)
+		return false;
+	if(_wrename(wpath->c_str(), wpathNew->c_str()) == 0) {
 #else
 	if(rename(path.c_str(), pathNew.c_str()) == 0) {
 #endif
@@ -612,9 +631,11 @@ static void find_files(const std::string &path, const std::string &ctarget, cons
 	}
 #else
 	auto searchPath = path + '*';
-	auto wsearchPath = ustring::string_to_wstring(searchPath);
+	auto wsearchPath = string_to_wstring(searchPath);
+	if(!wsearchPath)
+		return;
 	WIN32_FIND_DATAW data;
-	HANDLE hFind = FindFirstFileW(wsearchPath.c_str(), &data);
+	HANDLE hFind = FindFirstFileW(wsearchPath->c_str(), &data);
 	while(hFind != INVALID_HANDLE_VALUE) {
 		if(resfiles != NULL) {
 			if((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
@@ -821,7 +842,10 @@ static bool create_path(const std::string &root, const char *path)
 				return false;
 		}
 #else
-		if(CreateDirectoryW(ustring::string_to_wstring(FileManager::GetSubPath(root, p.substr(0, pos))).c_str(), NULL) == 0 && GetLastError() != ERROR_ALREADY_EXISTS)
+		auto wstr = string_to_wstring(FileManager::GetSubPath(root, p.substr(0, pos)));
+		if(!wstr)
+			return false;
+		if(CreateDirectoryW(wstr->c_str(), NULL) == 0 && GetLastError() != ERROR_ALREADY_EXISTS)
 			return false;
 #endif
 	} while(pos != ustring::NOT_FOUND);
@@ -846,7 +870,10 @@ DLLFSYSTEM bool FileManager::CreateSystemDirectory(const char *dir)
 			return false;
 	}
 #else
-	if(CreateDirectoryW(ustring::string_to_wstring(p).c_str(), NULL) != 0 || GetLastError() == ERROR_ALREADY_EXISTS)
+	auto wstr = string_to_wstring(p);
+	if(!wstr)
+		return false;
+	if(CreateDirectoryW(wstr->c_str(), NULL) != 0 || GetLastError() == ERROR_ALREADY_EXISTS)
 		return true;
 #endif
 	return false;
@@ -991,7 +1018,10 @@ unsigned long long get_file_attributes(const std::string &fpath)
 		return FILE_ATTRIBUTE_DIRECTORY;
 	return FILE_ATTRIBUTE_NORMAL;
 #else
-	return GetFileAttributesW(ustring::string_to_wstring(fpath).c_str());
+	auto wstr = string_to_wstring(fpath);
+	if(!wstr)
+		return INVALID_FILE_ATTRIBUTES;
+	return GetFileAttributesW(wstr->c_str());
 #endif
 }
 
@@ -1162,7 +1192,11 @@ DLLFSYSTEM bool FileManager::MoveFile(const char *cfile, const char *cfNewPath)
 		auto out = root + DIR_SEPARATOR;
 		out += GetNormalizedPath(cfNewPath);
 #ifdef _WIN32
-		auto r = MoveFileW(ustring::string_to_wstring(in).c_str(), ustring::string_to_wstring(out).c_str());
+		auto win = string_to_wstring(in);
+		auto wout = string_to_wstring(out);
+		if(!win || !wout)
+			return false;
+		auto r = MoveFileW(win->c_str(), wout->c_str());
 		return (r != 0) ? true : false;
 #else
 		std::replace(in.begin(), in.end(), '\\', '/');
