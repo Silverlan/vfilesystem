@@ -34,7 +34,8 @@ extern "C" {
 #include <iostream>
 
 #pragma optimize("", off)
-std::optional<std::wstring> string_to_wstring(const std::string &str) {
+std::optional<std::wstring> string_to_wstring(const std::string &str)
+{
 	try {
 		return ustring::string_to_wstring(str);
 	}
@@ -829,6 +830,8 @@ static bool create_path(const std::string &root, const char *path)
 {
 	std::string p = path;
 	p = FileManager::GetCanonicalizedPath(p);
+	if(p.empty())
+		return true;
 	size_t pos = 0;
 	do {
 		pos = p.find_first_of(DIR_SEPARATOR, pos + 1);
@@ -838,8 +841,13 @@ static bool create_path(const std::string &root, const char *path)
 		std::replace(subPath.begin(), subPath.end(), '\\', '/');
 		const char *pSub = subPath.c_str();
 		if(stat(pSub, &st) == -1) {
-			if(!std::filesystem::create_directory(pSub))
+			try {
+				if(!std::filesystem::create_directory(pSub))
+					return false;
+			}
+			catch(const std::runtime_error &e) {
 				return false;
+			}
 		}
 #else
 		auto wstr = string_to_wstring(FileManager::GetSubPath(root, p.substr(0, pos)));
