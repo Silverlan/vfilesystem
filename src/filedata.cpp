@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "fsys/filesystem.h"
+#ifdef __linux__
 #include "fcaseopen.h"
+#endif
 #include <sharedutils/util_string.h>
 #include <cstring>
 

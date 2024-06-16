@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "impl_fsys_util.hpp"
+#ifdef __linux__
 #include "fcaseopen.h"
+#endif
 
 bool fsys::impl::has_value(std::vector<std::string> *values, size_t start, size_t end, std::string val, bool bKeepCase)
 {

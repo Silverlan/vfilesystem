@@ -18,7 +18,12 @@ pr_add_external_dependency(${PROJ_NAME} liblzma HEADER_ONLY)
 pr_add_external_dependency(${PROJ_NAME} bzip2 HEADER_ONLY)
 
 pr_add_headers(${PROJ_NAME} "include/")
-pr_add_sources(${PROJ_NAME} "src/")
+if(WIN32)
+	# We don't need the .c-files on Windows, so we use a custom filter.
+	pr_add_sources(${PROJ_NAME} "src/" FILTER "src/*.cpp")
+else()
+	pr_add_sources(${PROJ_NAME} "src/")
+endif()
 
 pr_add_compile_definitions(${PROJ_NAME} -DVFILESYSTEM_DLL)
 
