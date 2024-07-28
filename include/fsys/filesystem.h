@@ -9,6 +9,7 @@
 #include <mathutil/umath.h>
 #include <sharedutils/util_file.h>
 #include <optional>
+#include <filesystem>
 #include <memory>
 
 #pragma warning(push)
@@ -226,6 +227,7 @@ namespace filemanager {
 	DLLFSYSTEM std::string get_file(const std::string_view &path);
 	DLLFSYSTEM std::string get_canonicalized_path(const std::string_view &path);
 	DLLFSYSTEM std::string get_sub_path(const std::string_view &path);
+	DLLFSYSTEM std::optional<std::filesystem::file_time_type> get_last_write_time(const std::string_view &path, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	DLLFSYSTEM std::uint64_t get_file_size(const std::string_view &name, fsys::SearchFlags fsearchmode = fsys::SearchFlags::All);
 	DLLFSYSTEM bool exists(const std::string_view &name, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	DLLFSYSTEM bool is_file(const std::string_view &name, fsys::SearchFlags fsearchmode = fsys::SearchFlags::All);
@@ -323,6 +325,7 @@ class DLLFSYSTEM FileManager {
 	static std::string GetFile(std::string &path);
 	static std::string GetCanonicalizedPath(std::string path);
 	static std::string GetSubPath(std::string path);
+	static std::optional<std::filesystem::file_time_type> GetLastWriteTime(const std::string_view &path, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	static std::uint64_t GetFileSize(std::string name, fsys::SearchFlags fsearchmode = fsys::SearchFlags::All);
 	static bool Exists(std::string name, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	static bool IsFile(std::string name, fsys::SearchFlags fsearchmode = fsys::SearchFlags::All);

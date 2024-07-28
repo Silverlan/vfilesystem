@@ -166,6 +166,7 @@ std::string filemanager::get_file(const std::string_view &path)
 }
 std::string filemanager::get_canonicalized_path(const std::string_view &path) { return FileManager::GetCanonicalizedPath(std::string {path}); }
 std::string filemanager::get_sub_path(const std::string_view &path) { return FileManager::GetSubPath(std::string {path}); }
+std::optional<std::filesystem::file_time_type> filemanager::get_last_write_time(const std::string_view &path, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FileManager::GetLastWriteTime(path, includeFlags, excludeFlags); }
 std::uint64_t filemanager::get_file_size(const std::string_view &name, fsys::SearchFlags fsearchmode) { return FileManager::GetFileSize(std::string {name}, fsearchmode); }
 bool filemanager::exists(const std::string_view &name, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FileManager::Exists(std::string {name}, includeFlags, excludeFlags); }
 bool filemanager::is_file(const std::string_view &name, fsys::SearchFlags fsearchmode) { return FileManager::IsFile(std::string {name}, fsearchmode); }

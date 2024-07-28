@@ -939,6 +939,21 @@ DLLFSYSTEM void FileManager::WriteString(FILE *f, std::string str, bool bBinary)
 	fwrite(n, 1, 1, f);
 }
 
+std::optional<std::filesystem::file_time_type> FileManager::GetLastWriteTime(const std::string_view &path, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
+{
+	std::string rpath;
+	if(!FindLocalPath(std::string {path}, rpath, includeFlags, excludeFlags))
+		return {};
+	try {
+		auto ftime = std::filesystem::last_write_time(rpath);
+		return ftime;
+	}
+	catch(std::filesystem::filesystem_error &e) {
+		return {};
+	}
+	return {};
+}
+
 DLLFSYSTEM std::uint64_t FileManager::GetFileSize(std::string name, fsys::SearchFlags fsearchmode)
 {
 	NormalizePath(name);
