@@ -1143,7 +1143,7 @@ bool FileManager::IsSystemFile(std::string name)
 	std::replace(name.begin(), name.end(), '\\', '/');
 #endif
 	fsys::impl::to_case_sensitive_path(name);
-	return (get_file_flags(name) & FVFILE_DIRECTORY) == 0;
+	return (get_file_flags(name) & (FVFILE_DIRECTORY | FVFILE_INVALID)) == 0;
 }
 bool FileManager::IsSystemDir(std::string name)
 {
@@ -1152,7 +1152,7 @@ bool FileManager::IsSystemDir(std::string name)
 	std::replace(name.begin(), name.end(), '\\', '/');
 #endif
 	fsys::impl::to_case_sensitive_path(name);
-	return (get_file_flags(name) & FVFILE_DIRECTORY) == FVFILE_DIRECTORY;
+	return (get_file_flags(name) & (FVFILE_DIRECTORY | FVFILE_INVALID)) == FVFILE_DIRECTORY;
 }
 
 bool FileManager::CopySystemFile(const char *cfile, const char *cfNewPath)
