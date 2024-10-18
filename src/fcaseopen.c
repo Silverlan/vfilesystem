@@ -139,7 +139,7 @@ FILE *fcasereopen(FILE **f,char const *path, char const *mode)
     f = NULL;
     freopen_s(f,path,mode,*f);
 #endif
-    return f;
+    return *f;
 }
 
 void casechdir(char const *path)
