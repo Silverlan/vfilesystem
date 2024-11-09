@@ -103,7 +103,7 @@ std::string filemanager::detail::to_string_mode(filemanager::FileMode mode)
 	return strMode;
 }
 
-VFilePtr filemanager::open_file(const std::string_view &path, FileMode mode, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FileManager::OpenFile(path.data(), detail::to_string_mode(mode).c_str(), includeFlags, excludeFlags); }
+VFilePtr filemanager::open_file(const std::string_view &path, FileMode mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FileManager::OpenFile(path.data(), detail::to_string_mode(mode).c_str(), optOutErr, includeFlags, excludeFlags); }
 
 bool filemanager::write_file(const std::string_view &path, const std::string_view &contents)
 {
@@ -122,14 +122,14 @@ std::optional<std::string> filemanager::read_file(const std::string_view &path)
 }
 
 template<class T>
-T filemanager::open_file(const std::string_view &path, FileMode mode, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags);
+T filemanager::open_file(const std::string_view &path, FileMode mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags);
 
 std::string filemanager::get_program_path() { return util::get_program_path(); }
 void filemanager::add_custom_mount_directory(const std::string_view &cpath, fsys::SearchFlags searchMode) { FileManager::AddCustomMountDirectory(cpath.data(), searchMode); }
 void filemanager::add_custom_mount_directory(const std::string_view &cpath, bool bAbsolutePath, fsys::SearchFlags searchMode) { FileManager::AddCustomMountDirectory(cpath.data(), bAbsolutePath, searchMode); }
 void filemanager::remove_custom_mount_directory(const std::string_view &path) { FileManager::RemoveCustomMountDirectory(path.data()); }
 void filemanager::clear_custom_mount_directories() { FileManager::ClearCustomMountDirectories(); }
-VFilePtrReal filemanager::open_system_file(const std::string_view &cpath, FileMode mode) { return FileManager::OpenSystemFile(cpath.data(), detail::to_string_mode(mode).c_str()); }
+VFilePtrReal filemanager::open_system_file(const std::string_view &cpath, FileMode mode, std::string *optOutErr) { return FileManager::OpenSystemFile(cpath.data(), detail::to_string_mode(mode).c_str(), optOutErr); }
 bool filemanager::create_path(const std::string_view &path) { return FileManager::CreatePath(path.data()); }
 bool filemanager::create_directory(const std::string_view &dir) { return FileManager::CreateDirectory(dir.data()); }
 std::pair<VDirectory *, VFile *> filemanager::add_virtual_file(const std::string_view &path, const std::shared_ptr<std::vector<uint8_t>> &data) { return FileManager::AddVirtualFile(path.data(), data); }

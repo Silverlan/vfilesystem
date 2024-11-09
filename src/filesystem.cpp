@@ -124,9 +124,9 @@ template<>
 DLLFSYSTEM
 #endif
   VFilePtrReal
-  FileManager::OpenFile<VFilePtrReal>(const char *cpath, const char *mode, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
+  FileManager::OpenFile<VFilePtrReal>(const char *cpath, const char *mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
 {
-	return std::static_pointer_cast<VFilePtrInternalReal>(OpenFile(cpath, mode, includeFlags, excludeFlags));
+	return std::static_pointer_cast<VFilePtrInternalReal>(OpenFile(cpath, mode, optOutErr, includeFlags, excludeFlags));
 }
 
 template<>
@@ -134,9 +134,9 @@ template<>
 DLLFSYSTEM
 #endif
   VFilePtrVirtual
-  FileManager::OpenFile<VFilePtrVirtual>(const char *cpath, const char *mode, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
+  FileManager::OpenFile<VFilePtrVirtual>(const char *cpath, const char *mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
 {
-	return std::static_pointer_cast<VFilePtrInternalVirtual>(OpenFile(cpath, mode, includeFlags, excludeFlags));
+	return std::static_pointer_cast<VFilePtrInternalVirtual>(OpenFile(cpath, mode, optOutErr, includeFlags, excludeFlags));
 }
 
 decltype(FileManager::m_vroot) FileManager::m_vroot;
@@ -285,12 +285,16 @@ DLLFSYSTEM bool FileManager::IsBinaryMode(const char *mode)
 	return false;
 }
 
-DLLFSYSTEM VFilePtrReal FileManager::OpenSystemFile(const char *cpath, const char *mode)
+DLLFSYSTEM VFilePtrReal FileManager::OpenSystemFile(const char *cpath, const char *mode, std::string *optOutErr)
 {
 	std::string path = GetCanonicalizedPath(cpath);
 	auto ptrReal = std::make_shared<VFilePtrInternalReal>();
-	if(!ptrReal->Construct(path.c_str(), mode))
+	int err = 0;
+	if(!ptrReal->Construct(path.c_str(), mode, &err)) {
+		if(optOutErr)
+			*optOutErr = std::strerror(err);
 		return nullptr;
+	}
 	ptrReal->m_bBinary = FileManager::IsBinaryMode(mode);
 	ptrReal->m_bRead = !FileManager::IsWriteMode(mode);
 	if(!ptrReal->m_bRead)
@@ -321,7 +325,7 @@ fsys::PackageManager *FileManager::GetPackageManager(const std::string &name)
 	return it->second.get();
 }
 
-DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath, const char *mode, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
+DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath, const char *mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
 {
 	std::string path = GetCanonicalizedPath(cpath);
 	if(m_customFileHandler != nullptr) {
@@ -390,8 +394,12 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath, const char *mode, f
 	if(bAbsolute == false)
 		fpath = appPath + fpath;
 	auto ptrReal = std::make_shared<VFilePtrInternalReal>();
-	if(!ptrReal->Construct(fpath.c_str(), mode))
+	int err = 0;
+	if(!ptrReal->Construct(fpath.c_str(), mode, &err)) {
+		if(optOutErr)
+			*optOutErr = std::strerror(err);
 		return NULL;
+	}
 	pfile = ptrReal;
 	pfile->m_bBinary = bBinary;
 	pfile->m_bRead = true;
@@ -976,7 +984,7 @@ DLLFSYSTEM std::uint64_t FileManager::GetFileSize(std::string name, fsys::Search
 	}
 	if((fsearchmode & fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return 0;
-	auto f = OpenFile(name.c_str(), "rb", fsearchmode);
+	auto f = OpenFile(name.c_str(), "rb", nullptr, fsearchmode);
 	if(f == NULL)
 		return 0;
 	return f->GetSize();

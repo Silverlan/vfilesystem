@@ -154,7 +154,7 @@ class DLLFSYSTEM VFilePtrInternalReal : public VFilePtrInternal {
   public:
 	VFilePtrInternalReal();
 	virtual ~VFilePtrInternalReal() override;
-	bool Construct(const char *path, const char *mode);
+	bool Construct(const char *path, const char *mode, int *optOutErrno = nullptr);
 	const std::string &GetPath() const;
 	size_t Read(void *ptr, size_t size);
 	size_t Write(const void *ptr, size_t size);
@@ -191,7 +191,7 @@ namespace filemanager {
 	namespace detail {
 		DLLFSYSTEM std::string to_string_mode(FileMode mode);
 	};
-	DLLFSYSTEM VFilePtr open_file(const std::string_view &path, FileMode mode, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
+	DLLFSYSTEM VFilePtr open_file(const std::string_view &path, FileMode mode, std::string *optOutErr = nullptr, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	DLLFSYSTEM bool write_file(const std::string_view &path, const std::string_view &contents);
 	DLLFSYSTEM std::optional<std::string> read_file(const std::string_view &path);
 	DLLFSYSTEM void set_use_file_index_cache(bool useCache);
@@ -203,14 +203,14 @@ namespace filemanager {
 	DLLFSYSTEM void reset_file_index_cache();
 
 	template<class T>
-	T open_file(const std::string_view &path, FileMode mode, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
+	T open_file(const std::string_view &path, FileMode mode, std::string *optOutErr = nullptr, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 
 	DLLFSYSTEM std::string get_program_path();
 	DLLFSYSTEM void add_custom_mount_directory(const std::string_view &cpath, fsys::SearchFlags searchMode = fsys::SearchFlags::Local);
 	DLLFSYSTEM void add_custom_mount_directory(const std::string_view &cpath, bool bAbsolutePath, fsys::SearchFlags searchMode = fsys::SearchFlags::Local);
 	DLLFSYSTEM void remove_custom_mount_directory(const std::string_view &path);
 	DLLFSYSTEM void clear_custom_mount_directories();
-	DLLFSYSTEM VFilePtrReal open_system_file(const std::string_view &cpath, FileMode mode);
+	DLLFSYSTEM VFilePtrReal open_system_file(const std::string_view &cpath, FileMode mode, std::string *optOutErr = nullptr);
 	DLLFSYSTEM bool create_path(const std::string_view &path);
 	DLLFSYSTEM bool create_directory(const std::string_view &dir);
 	DLLFSYSTEM std::pair<VDirectory *, VFile *> add_virtual_file(const std::string_view &path, const std::shared_ptr<std::vector<uint8_t>> &data);
@@ -293,16 +293,16 @@ class DLLFSYSTEM FileManager {
   public:
 	static bool IsWriteMode(const char *mode);
 	static bool IsBinaryMode(const char *mode);
-	static VFilePtr OpenFile(const char *cpath, const char *mode, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
+	static VFilePtr OpenFile(const char *cpath, const char *mode, std::string *optOutErr = nullptr, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	template<class T>
-	static T OpenFile(const char *cpath, const char *mode, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
+	static T OpenFile(const char *cpath, const char *mode, std::string *optOutErr = nullptr, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	// Opens a file anywhere from the disk. Needs the whole path. (e.g. 'C:\\directory\\file.txt')
 	static std::string GetProgramPath();
 	static void AddCustomMountDirectory(const char *cpath, fsys::SearchFlags searchMode = fsys::SearchFlags::Local);
 	static void AddCustomMountDirectory(const char *cpath, bool bAbsolutePath, fsys::SearchFlags searchMode = fsys::SearchFlags::Local);
 	static void RemoveCustomMountDirectory(const char *path);
 	static void ClearCustomMountDirectories();
-	static VFilePtrReal OpenSystemFile(const char *cpath, const char *mode);
+	static VFilePtrReal OpenSystemFile(const char *cpath, const char *mode, std::string *optOutErr = nullptr);
 	static bool CreatePath(const char *path);
 	static bool CreateDirectory(const char *dir);
 	static void SetCustomFileHandler(const std::function<VFilePtr(const std::string &, const char *mode)> &fHandler);
@@ -366,9 +366,9 @@ class DLLFSYSTEM FileManager {
 };
 
 template<class T>
-T filemanager::open_file(const std::string_view &path, FileMode mode, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
+T filemanager::open_file(const std::string_view &path, FileMode mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
 {
-	return FileManager::OpenFile<T>(path.data(), detail::to_string_mode(mode).c_str(), includeFlags, excludeFlags);
+	return FileManager::OpenFile<T>(path.data(), detail::to_string_mode(mode).c_str(), optOutErr, includeFlags, excludeFlags);
 }
 
 #pragma warning(pop)

@@ -349,14 +349,18 @@ VFilePtrInternalReal::~VFilePtrInternalReal()
 		fclose(m_file);
 }
 const std::string &VFilePtrInternalReal::GetPath() const { return m_path; }
-bool VFilePtrInternalReal::Construct(const char *path, const char *mode)
+
+bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *optOutErrno)
 {
 	std::string sPath = path;
 	std::replace(sPath.begin(), sPath.end(), '\\', '/');
 #ifdef _WIN32
 	auto wpath = string_to_wstring(path);
-	if(!wpath)
+	if(!wpath) {
+		if(optOutErrno)
+			*optOutErrno = 0;
 		return false;
+	}
 	auto wmode = ustring::string_to_wstring(mode);
 	m_file = nullptr;
 	_wfopen_s(&m_file, wpath->data(), wmode.data());
@@ -364,8 +368,11 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode)
 	m_file = fcaseopen(sPath.c_str(), mode);
 #endif
 
-	if(m_file == NULL)
+	if(m_file == NULL) {
+		if(optOutErrno)
+			*optOutErrno = errno;
 		return false;
+	}
 	m_path = sPath.c_str();
 	long long cur = ftell(m_file);
 	fseek(m_file, 0, SEEK_END);
