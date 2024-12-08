@@ -107,7 +107,7 @@ VFilePtr filemanager::open_file(const std::string_view &path, FileMode mode, std
 
 bool filemanager::write_file(const std::string_view &path, const std::string_view &contents)
 {
-	auto f = open_file<VFilePtrReal>(path, filemanager::FileMode::Write);
+	auto f = open_file<VFilePtrReal>(path, filemanager::FileMode::Write | filemanager::FileMode::Binary);
 	if(!f)
 		return false;
 	f->WriteString(contents.data());
