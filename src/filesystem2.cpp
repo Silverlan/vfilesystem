@@ -130,7 +130,7 @@ void filemanager::add_custom_mount_directory(const std::string_view &cpath, bool
 void filemanager::remove_custom_mount_directory(const std::string_view &path) { FileManager::RemoveCustomMountDirectory(path.data()); }
 void filemanager::clear_custom_mount_directories() { FileManager::ClearCustomMountDirectories(); }
 VFilePtrReal filemanager::open_system_file(const std::string_view &cpath, FileMode mode, std::string *optOutErr) { return FileManager::OpenSystemFile(cpath.data(), detail::to_string_mode(mode).c_str(), optOutErr); }
-bool filemanager::create_path(const std::string_view &path) { return FileManager::CreatePath(path.data()); }
+bool filemanager::create_path(const std::string_view &path) { return FileManager::CreatePath(std::string {path}.c_str()); }
 bool filemanager::create_directory(const std::string_view &dir) { return FileManager::CreateDirectory(dir.data()); }
 std::pair<VDirectory *, VFile *> filemanager::add_virtual_file(const std::string_view &path, const std::shared_ptr<std::vector<uint8_t>> &data) { return FileManager::AddVirtualFile(path.data(), data); }
 VDirectory *filemanager::get_root_directory() { return FileManager::GetRootDirectory(); }
@@ -197,7 +197,7 @@ bool filemanager::remove_system_file(const std::string_view &file) { return File
 bool filemanager::remove_system_directory(const std::string_view &dir) { return FileManager::RemoveSystemDirectory(dir.data()); }
 bool filemanager::rename_system_file(const std::string_view &file, const std::string_view &fNewName) { return FileManager::RenameSystemFile(file.data(), fNewName.data()); }
 std::string filemanager::get_sub_path(const std::string_view &root, const std::string_view &path) { return FileManager::GetSubPath(root.data(), path.data()); }
-bool filemanager::create_system_path(const std::string_view &root, const std::string_view &path) { return FileManager::CreateSystemPath(root.data(), path.data()); }
+bool filemanager::create_system_path(const std::string_view &root, const std::string_view &path) { return FileManager::CreateSystemPath(std::string {root}.c_str(), path.data()); }
 bool filemanager::create_system_directory(const std::string_view &dir) { return FileManager::CreateSystemDirectory(dir.data()); }
 
 VFilePtr filemanager::open_package_file(const std::string_view &packageName, const std::string_view &cpath, FileMode mode, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
