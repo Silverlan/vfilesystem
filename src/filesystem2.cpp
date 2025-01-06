@@ -115,10 +115,17 @@ bool filemanager::write_file(const std::string_view &path, const std::string_vie
 }
 std::optional<std::string> filemanager::read_file(const std::string_view &path)
 {
-	auto f = open_file(path, filemanager::FileMode::Read);
+	auto f = open_file(path, filemanager::FileMode::Read | filemanager::FileMode::Binary);
 	if(!f)
 		return {};
-	return f->ReadString();
+	auto sz = f->GetSize();
+	if(sz == 0)
+		return {};
+	std::string str(sz, '\0');
+	auto readSize = f->Read(&str[0], 1, sz);
+	if(readSize != sz)
+		str.resize(readSize);
+	return str;
 }
 
 template<class T>
