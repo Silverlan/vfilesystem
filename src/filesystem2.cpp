@@ -110,7 +110,7 @@ bool filemanager::write_file(const std::string_view &path, const std::string_vie
 	auto f = open_file<VFilePtrReal>(path, filemanager::FileMode::Write | filemanager::FileMode::Binary);
 	if(!f)
 		return false;
-	f->WriteString(contents.data());
+	f->WriteString(contents, false);
 	return true;
 }
 std::optional<std::string> filemanager::read_file(const std::string_view &path)

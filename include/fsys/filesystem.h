@@ -166,8 +166,7 @@ class DLLFSYSTEM VFilePtrInternalReal : public VFilePtrInternal {
 	unsigned long long GetSize();
 	template<class T>
 	void Write(T t);
-	void WriteString(std::string str);
-	int WriteString(const char *str);
+	int WriteString(const std::string_view &sv, bool withBinaryZeroByte = true);
 	bool ReOpen(const char *mode);
 };
 

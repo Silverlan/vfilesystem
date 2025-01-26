@@ -492,8 +492,7 @@ static bool remove_directory(const std::string &rootPath, const char *cdir, cons
 bool FileManager::RemoveSystemDirectory(const char *cdir) { return remove_directory("", cdir, FileManager::FindSystemFiles, FileManager::RemoveSystemFile); }
 bool FileManager::RemoveDirectory(const char *cdir)
 {
-	return remove_directory(
-	  FileManager::GetRootPath() + '\\', cdir, [](const char *cfind, std::vector<std::string> *resfiles, std::vector<std::string> *resdirs, bool bKeepPath) { FileManager::FindFiles(cfind, resfiles, resdirs, bKeepPath); }, FileManager::RemoveFile);
+	return remove_directory(FileManager::GetRootPath() + '\\', cdir, [](const char *cfind, std::vector<std::string> *resfiles, std::vector<std::string> *resdirs, bool bKeepPath) { FileManager::FindFiles(cfind, resfiles, resdirs, bKeepPath); }, FileManager::RemoveFile);
 }
 
 static bool rename_file(const std::string &root, const std::string &file, const std::string &fNewName)
@@ -1324,16 +1323,17 @@ int VFilePtrInternalReal::Eof() { return feof(m_file); }
 
 int VFilePtrInternalReal::ReadChar() { return fgetc(m_file); }
 
-void VFilePtrInternalReal::WriteString(std::string str) { FileManager::WriteString(m_file, str, m_bBinary); }
-
-int VFilePtrInternalReal::WriteString(const char *str)
+int VFilePtrInternalReal::WriteString(const std::string_view &sv, bool withBinaryZeroByte)
 {
-	unsigned int pos = 0;
-	while(str[pos] != '\0') {
-		Write<char>(str[pos]);
-		pos++;
+	auto len = sv.length();
+	if(len == 0)
+		return 0;
+	len = fwrite(sv.data(), 1, len, m_file);
+	if(withBinaryZeroByte && m_bBinary) {
+		char n[1] = {'\0'};
+		len += fwrite(n, 1, 1, m_file);
 	}
-	return 0;
+	return len;
 }
 
 //////////////////////////
