@@ -46,8 +46,6 @@ void VDirectory::Remove(VData *file)
 
 ///////////////////////////
 
-#define IsEOF(c) (c == EOF || Eof())
-
 VFilePtrInternal::VFilePtrInternal() : m_bRead(false), m_bBinary(false) {}
 VFilePtrInternal::~VFilePtrInternal() {}
 bool VFilePtrInternal::ShouldRemoveComments() { return (m_bRead == true && m_bBinary == false) ? true : false; }
@@ -132,8 +130,8 @@ std::string VFilePtrInternal::ReadString()
 	std::string name = "";
 	c = Read<char>();
 	bool bRemoveComments = ShouldRemoveComments();
-	while(c != '\0' && !IsEOF(c) && !Eof()) {
-		if(RemoveComments(c, bRemoveComments) && IsEOF(c) && !Eof())
+	while(c != '\0' && !Eof()) {
+		if(RemoveComments(c, bRemoveComments) && !Eof())
 			break;
 		name += c;
 		c = Read<char>();
@@ -150,8 +148,8 @@ std::string VFilePtrInternal::ReadLine()
 		return name;
 	}
 	bool bRemoveComments = ShouldRemoveComments();
-	while(c != '\0' && !IsEOF(c)) {
-		if(RemoveComments(c, bRemoveComments) && IsEOF(c))
+	while(c != '\0' && !Eof()) {
+		if(RemoveComments(c, bRemoveComments) && Eof())
 			break;
 		name += c;
 		c = Read<char>();
@@ -167,7 +165,7 @@ char *VFilePtrInternal::ReadString(char *str, int num)
 	int i = 0;
 	for(i = 0; i < num; i++) {
 		char c = Read<char>();
-		if(IsEOF(c))
+		if(Eof())
 			return NULL;
 		str[i] = c;
 		if(str[i] == '\n') {
@@ -189,14 +187,14 @@ unsigned long long VFilePtrInternal::FindFirstOf(const char *s)
 	bool bRemoveComments = ShouldRemoveComments();
 	do {
 		c = static_cast<unsigned char>(ReadChar());
-		if(!IsEOF(c) && (!RemoveComments(c, bRemoveComments) || !IsEOF(c))) {
+		if(!Eof() && (!RemoveComments(c, bRemoveComments) || !Eof())) {
 			while(s[cur] != '\0') {
 				if(c == s[cur])
 					return c;
 				cur++;
 			}
 		}
-	} while(!IsEOF(c));
+	} while(!Eof());
 	return static_cast<unsigned long long>(EOF);
 }
 unsigned long long VFilePtrInternal::FindFirstNotOf(const char *s)
@@ -208,7 +206,7 @@ unsigned long long VFilePtrInternal::FindFirstNotOf(const char *s)
 	bool bRemoveComments = ShouldRemoveComments();
 	do {
 		c = static_cast<unsigned char>(ReadChar());
-		if(!IsEOF(c) && (!RemoveComments(c, bRemoveComments) || !IsEOF(c))) {
+		if(!Eof() && (!RemoveComments(c, bRemoveComments) || !Eof())) {
 			bool ret = true;
 			while(s[cur] != '\0') {
 				if(c == s[cur]) {
@@ -221,7 +219,7 @@ unsigned long long VFilePtrInternal::FindFirstNotOf(const char *s)
 				return c;
 			cur = 0;
 		}
-	} while(!IsEOF(c));
+	} while(!Eof());
 	return static_cast<unsigned long long>(EOF);
 }
 std::string VFilePtrInternal::ReadUntil(const char *s)
@@ -234,7 +232,7 @@ std::string VFilePtrInternal::ReadUntil(const char *s)
 	bool bRemoveComments = ShouldRemoveComments();
 	do {
 		c = static_cast<unsigned char>(ReadChar());
-		if(!IsEOF(c) && (!RemoveComments(c, bRemoveComments) || !IsEOF(c))) {
+		if(!Eof() && (!RemoveComments(c, bRemoveComments) || !Eof())) {
 			while(s[cur] != '\0') {
 				if(c == s[cur]) {
 					Seek(Tell() - 1);
@@ -245,7 +243,7 @@ std::string VFilePtrInternal::ReadUntil(const char *s)
 			cur = 0;
 			ret += char(c);
 		}
-	} while(!IsEOF(c));
+	} while(!Eof());
 	return ret;
 }
 
@@ -294,7 +292,7 @@ unsigned long long VFilePtrInternal::Find(const char *s, bool bIgnoreCase)
 	bool bRemoveComments = ShouldRemoveComments();
 	do {
 		c = static_cast<char>(ReadChar());
-		if(!IsEOF(c) && (!RemoveComments(c, bRemoveComments) || !IsEOF(c))) {
+		if(!Eof() && (!RemoveComments(c, bRemoveComments) || !Eof())) {
 			while((!bIgnoreCase && c == cpy[cur]) || (bIgnoreCase && tolower(c) == cpy[cur])) {
 				cur++;
 				if(s[cur] == '\0') {
@@ -307,7 +305,7 @@ unsigned long long VFilePtrInternal::Find(const char *s, bool bIgnoreCase)
 			}
 			cur = 0;
 		}
-	} while(!IsEOF(c));
+	} while(!Eof());
 	if(bIgnoreCase)
 		delete[] cpy;
 	return static_cast<unsigned long long>(EOF);

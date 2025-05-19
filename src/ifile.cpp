@@ -23,6 +23,8 @@ void fsys::File::Seek(size_t offset, Whence whence)
 		return m_file->Seek(offset, SEEK_CUR);
 	case Whence::End:
 		return m_file->Seek(offset, SEEK_END);
+	default:
+		break;
 	}
 	return m_file->Seek(offset, SEEK_SET);
 }

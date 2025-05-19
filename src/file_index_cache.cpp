@@ -66,7 +66,7 @@ void fsys::FileIndexCache::NormalizePath(std::string &path) const
 	if(!path.empty() && path.front() == '/')
 		path = path.substr(1);
 	if(!path.empty() && path.back() == '/')
-		path.substr(0, path.size() - 1);
+		path = path.substr(0, path.size() - 1);
 }
 
 bool fsys::FileIndexCache::Exists(std::string path) const
