@@ -348,30 +348,55 @@ VFilePtrInternalReal::~VFilePtrInternalReal()
 }
 const std::string &VFilePtrInternalReal::GetPath() const { return m_path; }
 
-bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *optOutErrno)
+bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *optOutErrno, std::string *optOutErr)
 {
 	std::string sPath = path;
 	std::replace(sPath.begin(), sPath.end(), '\\', '/');
+
 #ifdef _WIN32
 	auto wpath = string_to_wstring(path);
 	if(!wpath) {
 		if(optOutErrno)
 			*optOutErrno = 0;
+		if(optOutErr)
+			*optOutErr = "failed to convert UTF‑8 path to UTF‑16";
 		return false;
 	}
 	auto wmode = ustring::string_to_wstring(mode);
+	if(!wmode) {
+		if(optOutErrno)
+			*optOutErrno = 0;
+		if(optOutErr)
+			*optOutErr = "failed to convert UTF‑8 mode string to UTF‑16";
+		return false;
+	}
+
 	m_file = nullptr;
-	_wfopen_s(&m_file, wpath->data(), wmode.data());
+	_wfopen_s(&m_file, wpath->c_str(), wmode->c_str());
 #else
 	m_file = fcaseopen(sPath.c_str(), mode);
 #endif
 
 	if(m_file == NULL) {
+#ifdef _WIN32
+		DWORD lastErr = GetLastError();
+		if(optOutErrno)
+			*optOutErrno = static_cast<int>(lastErr);
+		if(optOutErr) {
+			char buf[512] = {0};
+			FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, lastErr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf, (DWORD)sizeof(buf), nullptr);
+			*optOutErr = buf;
+		}
+#else
 		if(optOutErrno)
 			*optOutErrno = errno;
+		if(optOutErr)
+			*optOutErr = std::strerror(errno);
+#endif
 		return false;
 	}
-	m_path = sPath.c_str();
+
+	m_path = sPath;
 	long long cur = ftell(m_file);
 	fseek(m_file, 0, SEEK_END);
 	m_size = ftell(m_file);

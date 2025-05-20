@@ -154,7 +154,7 @@ class DLLFSYSTEM VFilePtrInternalReal : public VFilePtrInternal {
   public:
 	VFilePtrInternalReal();
 	virtual ~VFilePtrInternalReal() override;
-	bool Construct(const char *path, const char *mode, int *optOutErrno = nullptr);
+	bool Construct(const char *path, const char *mode, int *optOutErrno = nullptr, std::string *optOutErr = nullptr);
 	const std::string &GetPath() const;
 	size_t Read(void *ptr, size_t size) override;
 	size_t Write(const void *ptr, size_t size);
