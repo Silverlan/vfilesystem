@@ -363,16 +363,8 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *op
 		return false;
 	}
 	auto wmode = ustring::string_to_wstring(mode);
-	if(!wmode) {
-		if(optOutErrno)
-			*optOutErrno = 0;
-		if(optOutErr)
-			*optOutErr = "failed to convert UTF‑8 mode string to UTF‑16";
-		return false;
-	}
-
 	m_file = nullptr;
-	_wfopen_s(&m_file, wpath->c_str(), wmode->c_str());
+	_wfopen_s(&m_file, wpath->data(), wmode.data());
 #else
 	m_file = fcaseopen(sPath.c_str(), mode);
 #endif
