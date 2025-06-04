@@ -8,6 +8,7 @@
 #include "fsys_definitions.hpp"
 #include <mathutil/umath.h>
 #include <sharedutils/util_file.h>
+#include <sharedutils/util_path.hpp>
 #include <optional>
 #include <filesystem>
 #include <memory>
@@ -184,6 +185,7 @@ namespace fsys {
 	class PackageManager;
 	class Package;
 	class FileIndexCache;
+	class RootPathFileCacheManager;
 };
 namespace filemanager {
 	enum class FileMode : uint8_t { Binary = 1, Read = Binary << 1u, Write = Read << 1u, Append = Write << 1u };
@@ -194,7 +196,7 @@ namespace filemanager {
 	DLLFSYSTEM bool write_file(const std::string_view &path, const std::string_view &contents);
 	DLLFSYSTEM std::optional<std::string> read_file(const std::string_view &path);
 	DLLFSYSTEM void set_use_file_index_cache(bool useCache);
-	DLLFSYSTEM fsys::FileIndexCache *get_file_index_cache();
+	DLLFSYSTEM fsys::RootPathFileCacheManager *get_root_path_file_cache_manager();
 	DLLFSYSTEM void update_file_index_cache(const std::string_view &path, bool absolutePath = false);
 	// Force path into cache, even if file doesn't exist
 	DLLFSYSTEM void add_to_file_index_cache(const std::string_view &path, bool absolutePath = false, bool file = true);
@@ -244,6 +246,9 @@ namespace filemanager {
 	DLLFSYSTEM bool copy_system_file(const std::string_view &cfile, const std::string_view &cfNewPath);
 	DLLFSYSTEM bool move_file(const std::string_view &cfile, const std::string_view &cfNewPath);
 	DLLFSYSTEM void set_absolute_root_path(const std::string_view &path);
+	DLLFSYSTEM void add_secondary_absolute_read_only_root_path(const std::string &identifier, const std::string_view &path);
+	DLLFSYSTEM const util::Path &get_absolute_primary_root_path();
+	DLLFSYSTEM const std::vector<util::Path> &get_absolute_root_paths();
 	DLLFSYSTEM void set_root_path(const std::string_view &path);
 	DLLFSYSTEM std::string get_root_path();
 

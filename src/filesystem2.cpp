@@ -31,24 +31,26 @@ extern "C" {
 #include <filesystem>
 #include <array>
 #include <iostream>
+#include <cassert>
 
 #undef CreateFile
 
-static std::unique_ptr<fsys::FileIndexCache> g_fileIndexCache {};
+static std::unique_ptr<fsys::RootPathFileCacheManager> g_rootPathFileCacheManager {};
+static std::vector<util::Path> g_absoluteRootPaths {};
 void filemanager::set_use_file_index_cache(bool useCache)
 {
 	if(!useCache) {
-		g_fileIndexCache = nullptr;
+		g_rootPathFileCacheManager = nullptr;
 		return;
 	}
-	g_fileIndexCache = std::make_unique<fsys::FileIndexCache>();
+	g_rootPathFileCacheManager = std::make_unique<fsys::RootPathFileCacheManager>();
 	reset_file_index_cache();
 }
-fsys::FileIndexCache *filemanager::get_file_index_cache() { return g_fileIndexCache.get(); }
+fsys::RootPathFileCacheManager *filemanager::get_root_path_file_cache_manager() { return g_rootPathFileCacheManager.get(); }
 unsigned long long get_file_attributes(const std::string &fpath);
 static void update_file_index_cache(const std::string_view &path, bool absolutePath, std::optional<fsys::FileIndexCache::Type> forceAddType)
 {
-	if(!g_fileIndexCache)
+	if(!g_rootPathFileCacheManager)
 		return;
 	if(absolutePath) {
 		auto rootPath = util::Path::CreatePath(filemanager::get_root_path());
@@ -65,24 +67,25 @@ static void update_file_index_cache(const std::string_view &path, bool absoluteP
 		}
 		return;
 	}
+	auto &primaryCache = g_rootPathFileCacheManager->GetPrimaryCache();
 	if(forceAddType.has_value()) {
-		g_fileIndexCache->Add(path, *forceAddType);
+		primaryCache.Add(path, *forceAddType);
 		return;
 	}
 	auto attrs = filemanager::get_file_attributes(path);
 	if(attrs == INVALID_FILE_ATTRIBUTES)
-		g_fileIndexCache->Remove(path);
+		primaryCache.Remove(path);
 	else
-		g_fileIndexCache->Add(path, (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0 ? fsys::FileIndexCache::Type::File : fsys::FileIndexCache::Type::Directory);
+		primaryCache.Add(path, (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0 ? fsys::FileIndexCache::Type::File : fsys::FileIndexCache::Type::Directory);
 }
 void filemanager::add_to_file_index_cache(const std::string_view &path, bool absolutePath, bool file) { ::update_file_index_cache(path, absolutePath, file ? fsys::FileIndexCache::Type::File : fsys::FileIndexCache::Type::Directory); }
 void filemanager::update_file_index_cache(const std::string_view &path, bool absolutePath) { ::update_file_index_cache(path, absolutePath, {}); }
-bool filemanager::is_file_index_cache_enabled() { return g_fileIndexCache != nullptr; }
+bool filemanager::is_file_index_cache_enabled() { return g_rootPathFileCacheManager != nullptr; }
 void filemanager::reset_file_index_cache()
 {
-	if(!g_fileIndexCache)
+	if(!g_rootPathFileCacheManager)
 		return;
-	g_fileIndexCache->Reset(get_root_path());
+	g_rootPathFileCacheManager->SetPrimaryRootLocation(get_root_path());
 }
 
 std::string filemanager::detail::to_string_mode(filemanager::FileMode mode)
@@ -193,7 +196,30 @@ void filemanager::find_system_files(const std::string_view &path, std::vector<st
 bool filemanager::copy_file(const std::string_view &cfile, const std::string_view &cfNewPath) { return FileManager::CopyFile(cfile.data(), cfNewPath.data()); }
 bool filemanager::copy_system_file(const std::string_view &cfile, const std::string_view &cfNewPath) { return FileManager::CopySystemFile(cfile.data(), cfNewPath.data()); }
 bool filemanager::move_file(const std::string_view &cfile, const std::string_view &cfNewPath) { return FileManager::MoveFile(cfile.data(), cfNewPath.data()); }
-void filemanager::set_absolute_root_path(const std::string_view &path) { return FileManager::SetAbsoluteRootPath(std::string {path}); }
+void filemanager::set_absolute_root_path(const std::string_view &path)
+{
+	auto dirPath = util::DirPath(path);
+	if(g_absoluteRootPaths.empty())
+		g_absoluteRootPaths.push_back(dirPath);
+	else
+		g_absoluteRootPaths.front() = dirPath;
+	return FileManager::SetAbsoluteRootPath(dirPath.GetString());
+}
+void filemanager::add_secondary_absolute_read_only_root_path(const std::string &identifier, const std::string_view &path)
+{
+	auto dirPath = util::DirPath(path);
+	g_absoluteRootPaths.push_back(dirPath);
+
+	if(!g_rootPathFileCacheManager)
+		return;
+	g_rootPathFileCacheManager->AddRootReadOnlyLocation(identifier, dirPath.GetString());
+}
+const util::Path &filemanager::get_absolute_primary_root_path()
+{
+	assert(!g_absoluteRootPaths.empty());
+	return g_absoluteRootPaths.front();
+}
+const std::vector<util::Path> &filemanager::get_absolute_root_paths() { return g_absoluteRootPaths; }
 void filemanager::set_root_path(const std::string_view &path) { return FileManager::SetRootPath(std::string {path}); }
 std::string filemanager::get_root_path() { return FileManager::GetRootPath(); }
 

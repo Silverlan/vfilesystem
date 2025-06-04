@@ -100,13 +100,22 @@ static unsigned long long update_file_insensitive_path_components_and_get_flags(
 		name = name.substr(0, name.length() - 1);
 
 	if(appPath.empty() == false) {
-		auto fullPath = appPath + "/" + mountPath + "/" + name;
+		// The filesystem is case-insensitive, but the operating system may not be, so we
+		// convert the path to the actual path on disk
+		appPath = util::DirPath(appPath).GetString();
+		if(!mountPath.empty())
+			mountPath = util::DirPath(mountPath).GetString();
+		auto fullPath = util::FilePath(appPath, mountPath, name).GetString();
 		fsys::impl::to_case_sensitive_path(fullPath);
 		auto offset = 0ull;
 		appPath = fullPath.substr(offset, appPath.length());
-		offset += appPath.length() + 1;
+		offset += appPath.length();
+		if(offset < fullPath.length() && fullPath[offset] == '/')
+			++offset;
 		mountPath = fullPath.substr(offset, mountPath.length());
-		offset += mountPath.length() + 1;
+		offset += mountPath.length();
+		if(offset < fullPath.length() && fullPath[offset] == '/')
+			++offset;
 		name = fullPath.substr(offset, name.length());
 		return get_file_flags(fullPath);
 	}
@@ -117,6 +126,15 @@ static unsigned long long update_file_insensitive_path_components_and_get_flags(
 	offset += mountPath.length() + 1;
 	name = fullPath.substr(offset, name.length());
 	return get_file_flags(fullPath);
+}
+
+static unsigned long long update_file_insensitive_path_components_and_get_flags(std::string &appPath, std::string &mountPath, bool mountPathAbsolute, std::string &path)
+{
+	if(mountPathAbsolute) {
+		std::string mnt {};
+		return update_file_insensitive_path_components_and_get_flags(mountPath, mnt, path);
+	}
+	return update_file_insensitive_path_components_and_get_flags(appPath, mountPath, path);
 }
 
 template<>
@@ -192,13 +210,15 @@ void FileManager::AddCustomMountDirectory(const char *cpath, bool bAbsolutePath,
 			return;
 		}
 	}
-	auto *cache = filemanager::get_file_index_cache();
+	auto *cache = filemanager::get_root_path_file_cache_manager();
 	if(cache) {
-		//Before we actually request to cache all entries, nativize the file entry.
-		auto cachedPath = bAbsolutePath ? "" : (filemanager::get_root_path() + '/') + path;
-		//cachedPath.make_preferred();
-		std::replace(cachedPath.begin(), cachedPath.end(), DIR_SEPARATOR_OTHER, DIR_SEPARATOR);
-		cache->QueuePath(cachedPath);
+		for(auto &[name, fcache] : cache->GetCaches()) {
+			//Before we actually request to cache all entries, nativize the file entry.
+			auto cachedPath = bAbsolutePath ? "" : util::DirPath(fcache->GetRootPath(), path).GetString();
+			//cachedPath.make_preferred();
+			std::replace(cachedPath.begin(), cachedPath.end(), DIR_SEPARATOR_OTHER, DIR_SEPARATOR);
+			fcache->QueuePath(cachedPath);
+		}
 	}
 
 	m_customMount.push_back(MountDirectory(path, bAbsolutePath, searchMode));
@@ -375,24 +395,28 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath, const char *mode, s
 	if((includeFlags & fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return NULL;
 
-	std::string appPath = GetRootPath() + DIR_SEPARATOR;
-	std::string fpath;
 	bool bFound = false;
-	bool bAbsolute = false;
-	if((includeFlags & fsys::SearchFlags::NoMounts) == fsys::SearchFlags::None) {
-		std::shared_lock lock {g_customMountMutex};
-		MountIterator it(m_customMount);
-		std::string mountPath;
-		while(bFound == false && it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
-			fpath = GetNormalizedPath(mountPath + DIR_SEPARATOR + path);
-			auto rootPath = (bAbsolute == false) ? appPath : "";
-			bFound = ((update_file_insensitive_path_components_and_get_flags(rootPath, mountPath, path) & FVFILE_INVALID) == 0) ? true : false;
+	std::string fpath;
+	std::shared_lock lock {g_customMountMutex};
+	for(auto &rootPath : filemanager::get_absolute_root_paths()) {
+		auto appPath = rootPath.GetString();
+		bool bAbsolute = false;
+		if((includeFlags & fsys::SearchFlags::NoMounts) == fsys::SearchFlags::None) {
+			MountIterator it(m_customMount);
+			std::string mountPath;
+			while(bFound == false && it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
+				fpath = GetNormalizedPath(mountPath + DIR_SEPARATOR + path);
+				bFound = ((update_file_insensitive_path_components_and_get_flags(appPath, mountPath, bAbsolute, path) & FVFILE_INVALID) == 0) ? true : false;
+			}
+		}
+		if(bFound) {
+			if(!bAbsolute)
+				fpath = util::FilePath(appPath, fpath).GetString();
+			break;
 		}
 	}
 	if(bFound == false)
 		fpath = path;
-	if(bAbsolute == false)
-		fpath = appPath + fpath;
 	auto ptrReal = std::make_shared<VFilePtrInternalReal>();
 	int err = 0;
 	if(!ptrReal->Construct(fpath.c_str(), mode, &err)) {
@@ -525,29 +549,30 @@ DLLFSYSTEM bool FileManager::RenameFile(const char *file, const char *fNewName) 
 std::vector<std::string> FileManager::FindAbsolutePaths(std::string path, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags, bool exitEarly)
 {
 	NormalizePath(path);
-	std::shared_lock lock {g_customMountMutex};
-	MountIterator it(FileManager::m_customMount);
-	std::string mountPath;
-	std::string appPath = GetRootPath() + DIR_SEPARATOR;
-	auto bAbsolute = false;
 	std::vector<std::string> paths;
-	while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
-		auto fpath = GetNormalizedPath(mountPath + DIR_SEPARATOR + path);
-		fsys::impl::to_case_sensitive_path(fpath);
-		auto rootPath = bAbsolute ? "" : appPath;
-		if((update_file_insensitive_path_components_and_get_flags(rootPath, mountPath, path) & FVFILE_INVALID) == 0) {
-			std::string rpath = fpath;
-			if(bAbsolute == false)
-				rpath = appPath + rpath;
-			util::canonicalize_path(rpath);
+	std::shared_lock lock {g_customMountMutex};
+	for(auto &rootPath : filemanager::get_absolute_root_paths()) {
+		auto appPath = rootPath.GetString();
+		MountIterator it(FileManager::m_customMount);
+		std::string mountPath;
+		auto bAbsolute = false;
+		while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
+			auto fpath = GetNormalizedPath(mountPath + DIR_SEPARATOR + path);
+			fsys::impl::to_case_sensitive_path(fpath);
+			if((update_file_insensitive_path_components_and_get_flags(appPath, mountPath, bAbsolute, path) & FVFILE_INVALID) == 0) {
+				std::string rpath = fpath;
+				if(bAbsolute == false)
+					rpath = appPath + rpath;
+				util::canonicalize_path(rpath);
 #ifdef __linux__
-			std::replace(rpath.begin(), rpath.end(), '\\', '/');
+				std::replace(rpath.begin(), rpath.end(), '\\', '/');
 #endif
-			if(paths.size() == paths.capacity())
-				paths.reserve(paths.size() * 2 + 5);
-			paths.push_back(std::move(rpath));
-			if(exitEarly)
-				break;
+				if(paths.size() == paths.capacity())
+					paths.reserve(paths.size() * 2 + 5);
+				paths.push_back(std::move(rpath));
+				if(exitEarly)
+					break;
+			}
 		}
 	}
 	return paths;
@@ -587,17 +612,19 @@ bool FileManager::FindLocalPath(std::string path, std::string &rpath, fsys::Sear
 {
 	NormalizePath(path);
 	std::shared_lock lock {g_customMountMutex};
-	MountIterator it(m_customMount);
-	std::string mountPath;
-	std::string appPath = GetRootPath() + "\\";
-	auto bAbsolute = false;
-	while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
-		if(bAbsolute == true)
-			continue;
-		auto fpath = GetNormalizedPath(mountPath + "\\" + path);
-		if((update_file_insensitive_path_components_and_get_flags(appPath, mountPath, path) & FVFILE_INVALID) == 0) {
-			rpath = fpath;
-			return true;
+	for(auto &rootPath : filemanager::get_absolute_root_paths()) {
+		auto appPath = rootPath.GetString();
+		MountIterator it(m_customMount);
+		std::string mountPath;
+		auto bAbsolute = false;
+		while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
+			if(bAbsolute == true)
+				continue;
+			auto fpath = GetNormalizedPath(mountPath + "\\" + path);
+			if((update_file_insensitive_path_components_and_get_flags(appPath, mountPath, path) & FVFILE_INVALID) == 0) {
+				rpath = fpath;
+				return true;
+			}
 		}
 	}
 	return false;
@@ -734,18 +761,20 @@ DLLFSYSTEM void FileManager::FindFiles(const char *cfind, std::vector<std::strin
 	if((includeFlags & fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return;
 	std::string localPath = path;
-	std::string appPath = GetRootPath();
 	std::shared_lock lock {g_customMountMutex};
-	MountIterator it(m_customMount);
-	std::string mountPath;
-	bool bAbsolute = false;
-	while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
-		std::string localMountPath = mountPath + DIR_SEPARATOR + localPath;
-		if(bAbsolute == false)
-			path = appPath + DIR_SEPARATOR + localMountPath;
-		else
-			path = localMountPath;
-		find_files(path, target, localMountPath, resfiles, resdirs, bKeepPath, szFiles, szDirs);
+	for(auto &rootPath : filemanager::get_absolute_root_paths()) {
+		auto appPath = rootPath.GetString();
+		MountIterator it(m_customMount);
+		std::string mountPath;
+		bool bAbsolute = false;
+		while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
+			std::string localMountPath = mountPath + DIR_SEPARATOR + localPath;
+			if(bAbsolute == false)
+				path = appPath + DIR_SEPARATOR + localMountPath;
+			else
+				path = localMountPath;
+			find_files(path, target, localMountPath, resfiles, resdirs, bKeepPath, szFiles, szDirs);
+		}
 	}
 }
 
@@ -1018,19 +1047,20 @@ DLLFSYSTEM bool FileManager::Exists(std::string name, fsys::SearchFlags includeF
 	if((includeFlags & fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return false;
 
-	auto *fic = filemanager::get_file_index_cache();
+	auto *fic = filemanager::get_root_path_file_cache_manager();
 	if(fic && fic->IsComplete())
 		return fic->Exists(name);
 
-	std::string appPath = GetRootPath();
 	std::shared_lock lock {g_customMountMutex};
-	MountIterator it(m_customMount);
-	std::string mountPath;
-	bool bAbsolute = false;
-	while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
-		auto rootPath = (bAbsolute == false) ? appPath : "";
-		if((update_file_insensitive_path_components_and_get_flags(rootPath, mountPath, name) & FVFILE_INVALID) == 0)
-			return true;
+	for(auto &rootPath : filemanager::get_absolute_root_paths()) {
+		auto appPath = rootPath.GetString();
+		MountIterator it(m_customMount);
+		std::string mountPath;
+		bool bAbsolute = false;
+		while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
+			if((update_file_insensitive_path_components_and_get_flags(appPath, mountPath, bAbsolute, name) & FVFILE_INVALID) == 0)
+				return true;
+		}
 	}
 	return false;
 }
@@ -1059,18 +1089,20 @@ unsigned long long get_file_attributes(const std::string &fpath)
 DLLFSYSTEM std::uint64_t FileManager::GetFileAttributes(std::string name)
 {
 	NormalizePath(name);
-	std::string appPath = GetRootPath() + DIR_SEPARATOR;
 	std::shared_lock lock {g_customMountMutex};
-	MountIterator it(m_customMount);
-	std::string mountPath;
-	bool bAbsolute = false;
-	while(it.GetNextDirectory(mountPath, fsys::SearchFlags::Local, fsys::SearchFlags::None, bAbsolute)) {
-		std::string fpath = mountPath + DIR_SEPARATOR + name;
-		if(bAbsolute == false)
-			fpath = appPath + DIR_SEPARATOR + fpath;
-		auto attrs = get_file_attributes(fpath);
-		if(attrs != INVALID_FILE_ATTRIBUTES)
-			return attrs;
+	for(auto &rootPath : filemanager::get_absolute_root_paths()) {
+		auto appPath = rootPath.GetString();
+		MountIterator it(m_customMount);
+		std::string mountPath;
+		bool bAbsolute = false;
+		while(it.GetNextDirectory(mountPath, fsys::SearchFlags::Local, fsys::SearchFlags::None, bAbsolute)) {
+			std::string fpath = mountPath + DIR_SEPARATOR + name;
+			if(bAbsolute == false)
+				fpath = appPath + DIR_SEPARATOR + fpath;
+			auto attrs = get_file_attributes(fpath);
+			if(attrs != INVALID_FILE_ATTRIBUTES)
+				return attrs;
+		}
 	}
 	return INVALID_FILE_ATTRIBUTES;
 }
@@ -1098,7 +1130,7 @@ DLLFSYSTEM std::uint64_t FileManager::GetFileFlags(std::string name, fsys::Searc
 	if((includeFlags & fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 		return FVFILE_INVALID;
 
-	auto *fic = filemanager::get_file_index_cache();
+	auto *fic = filemanager::get_root_path_file_cache_manager();
 	if(fic && fic->IsComplete()) {
 		auto type = fic->FindFileType(name);
 		uint64_t flags = 0;
@@ -1114,16 +1146,17 @@ DLLFSYSTEM std::uint64_t FileManager::GetFileFlags(std::string name, fsys::Searc
 		return flags;
 	}
 
-	std::string appPath = GetRootPath() + DIR_SEPARATOR;
 	std::shared_lock lock {g_customMountMutex};
-	MountIterator it(m_customMount);
-	std::string mountPath;
-	bool bAbsolute = false;
-	while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
-		auto rootPath = (bAbsolute == false) ? appPath : "";
-		auto flags = update_file_insensitive_path_components_and_get_flags(rootPath, mountPath, name);
-		if(flags != FVFILE_INVALID)
-			return flags;
+	for(auto &rootPath : filemanager::get_absolute_root_paths()) {
+		auto appPath = rootPath.GetString();
+		MountIterator it(m_customMount);
+		std::string mountPath;
+		bool bAbsolute = false;
+		while(it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
+			auto flags = update_file_insensitive_path_components_and_get_flags(appPath, mountPath, bAbsolute, name);
+			if(flags != FVFILE_INVALID)
+				return flags;
+		}
 	}
 	return FVFILE_INVALID;
 }

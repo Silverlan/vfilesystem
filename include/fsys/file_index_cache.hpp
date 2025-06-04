@@ -37,6 +37,7 @@ namespace fsys {
 		bool Exists(std::string path) const;
 		void Add(const std::string_view &path, Type type);
 		void Remove(const std::string_view &path);
+		const std::string &GetRootPath() const { return m_rootPath; }
 	  private:
 		void NormalizePath(std::string &path) const;
 		size_t Hash(const std::string_view &key, bool isAbsolutePath) const;
@@ -53,6 +54,31 @@ namespace fsys {
 		ctpl::thread_pool m_pool;
 		bool m_caseSensitive = false;
 		std::atomic<uint32_t> m_pending = 0;
+	};
+
+	/////////////////////
+
+	class DLLFSYSTEM RootPathFileCacheManager {
+		public:
+			RootPathFileCacheManager();
+
+			void SetPrimaryRootLocation(const std::string &rootPath);
+			void AddRootReadOnlyLocation(const std::string &identifier, const std::string_view &rootPath);
+			FileIndexCache *GetCache(const std::string &identifier);
+			FileIndexCache &GetPrimaryCache();
+			std::unordered_map<std::string, std::unique_ptr<FileIndexCache>> &GetCaches() { return m_caches; }
+
+			void QueuePath(const std::filesystem::path &path);
+			void Wait();
+			bool IsComplete() const;
+			std::optional<FileIndexCache::ItemInfo> FindItemInfo(std::string path) const;
+			FileIndexCache::Type FindFileType(std::string path) const;
+			bool Exists(std::string path) const;
+			void Add(const std::string_view &path, FileIndexCache::Type type);
+			void Remove(const std::string_view &path);
+		private:
+			std::unordered_map<std::string, std::unique_ptr<FileIndexCache>> m_caches;
+			FileIndexCache *m_primaryCache = nullptr;
 	};
 };
 
