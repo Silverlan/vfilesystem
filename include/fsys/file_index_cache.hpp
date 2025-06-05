@@ -62,6 +62,9 @@ namespace fsys {
 		public:
 			RootPathFileCacheManager();
 
+			RootPathFileCacheManager(const RootPathFileCacheManager&) = delete;
+			RootPathFileCacheManager& operator=(const RootPathFileCacheManager&) = delete;
+
 			void SetPrimaryRootLocation(const std::string &rootPath);
 			void AddRootReadOnlyLocation(const std::string &identifier, const std::string_view &rootPath);
 			FileIndexCache *GetCache(const std::string &identifier);
