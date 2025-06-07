@@ -207,6 +207,7 @@ namespace filemanager {
 	T open_file(const std::string_view &path, FileMode mode, std::string *optOutErr = nullptr, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 
 	DLLFSYSTEM std::string get_program_path();
+	DLLFSYSTEM std::string get_program_write_path();
 	DLLFSYSTEM void add_custom_mount_directory(const std::string_view &cpath, fsys::SearchFlags searchMode = fsys::SearchFlags::Local);
 	DLLFSYSTEM void add_custom_mount_directory(const std::string_view &cpath, bool bAbsolutePath, fsys::SearchFlags searchMode = fsys::SearchFlags::Local);
 	DLLFSYSTEM void remove_custom_mount_directory(const std::string_view &path);
@@ -254,6 +255,7 @@ namespace filemanager {
 
 	DLLFSYSTEM bool find_local_path(const std::string_view &path, std::string &rpath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	DLLFSYSTEM bool find_absolute_path(const std::string_view &path, std::string &rpath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
+	DLLFSYSTEM bool find_relative_path(const std::string_view &path, std::string &rpath);
 	DLLFSYSTEM char get_directory_separator();
 	DLLFSYSTEM bool remove_system_file(const std::string_view &file);
 	DLLFSYSTEM bool remove_system_directory(const std::string_view &dir);
@@ -353,6 +355,7 @@ class DLLFSYSTEM FileManager {
 	// Note: This will not include custom mounts that are located outside of the program location
 	static bool FindLocalPath(std::string path, std::string &rpath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	static bool FindAbsolutePath(std::string path, std::string &rpath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
+	static bool FindRelativePath(std::string path, std::string &rpath);
 	static std::vector<std::string> FindAbsolutePaths(std::string path, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	static bool AbsolutePathToCustomMountPath(const std::string &path, std::string &outMountPath, std::string &relativePath, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 	static char GetDirectorySeparator();

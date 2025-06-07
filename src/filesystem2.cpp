@@ -135,6 +135,12 @@ template<class T>
 T filemanager::open_file(const std::string_view &path, FileMode mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags);
 
 std::string filemanager::get_program_path() { return util::get_program_path(); }
+std::string filemanager::get_program_write_path()
+{
+	if(!g_absoluteRootPaths.empty())
+		return g_absoluteRootPaths.front().GetString();
+	return get_program_path();
+}
 void filemanager::add_custom_mount_directory(const std::string_view &cpath, fsys::SearchFlags searchMode) { FileManager::AddCustomMountDirectory(cpath.data(), searchMode); }
 void filemanager::add_custom_mount_directory(const std::string_view &cpath, bool bAbsolutePath, fsys::SearchFlags searchMode) { FileManager::AddCustomMountDirectory(cpath.data(), bAbsolutePath, searchMode); }
 void filemanager::remove_custom_mount_directory(const std::string_view &path) { FileManager::RemoveCustomMountDirectory(path.data()); }
@@ -225,6 +231,7 @@ std::string filemanager::get_root_path() { return FileManager::GetRootPath(); }
 
 bool filemanager::find_local_path(const std::string_view &path, std::string &rpath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FileManager::FindLocalPath(std::string {path}, rpath, includeFlags, excludeFlags); }
 bool filemanager::find_absolute_path(const std::string_view &path, std::string &rpath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FileManager::FindAbsolutePath(std::string {path}, rpath, includeFlags, excludeFlags); }
+bool filemanager::find_relative_path(const std::string_view &path, std::string &rpath) { return FileManager::FindRelativePath(std::string {path}, rpath); }
 char filemanager::get_directory_separator() { return FileManager::GetDirectorySeparator(); }
 bool filemanager::remove_system_file(const std::string_view &file) { return FileManager::RemoveSystemFile(file.data()); }
 bool filemanager::remove_system_directory(const std::string_view &dir) { return FileManager::RemoveSystemDirectory(dir.data()); }

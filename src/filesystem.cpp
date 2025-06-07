@@ -169,7 +169,7 @@ static std::shared_mutex g_rootPathMutex {};
 
 void FileManager::SetCustomFileHandler(const std::function<VFilePtr(const std::string &, const char *mode)> &fHandler) { m_customFileHandler = fHandler; }
 
-DLLFSYSTEM std::string FileManager::GetNormalizedPath(std::string path)
+std::string FileManager::GetNormalizedPath(std::string path)
 {
 #ifdef _WIN32
 	StringToLower(path);
@@ -178,7 +178,7 @@ DLLFSYSTEM std::string FileManager::GetNormalizedPath(std::string path)
 	return path;
 }
 
-DLLFSYSTEM std::string FileManager::GetProgramPath() { return util::get_program_path(); }
+std::string FileManager::GetProgramPath() { return util::get_program_path(); }
 
 void FileManager::RemoveCustomMountDirectory(const char *cpath)
 {
@@ -360,8 +360,7 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath, const char *mode, s
 	{
 		if((includeFlags & fsys::SearchFlags::Local) == fsys::SearchFlags::None)
 			return NULL;
-		std::string appPath = GetRootPath() + DIR_SEPARATOR;
-		std::string fpath = appPath + path;
+		std::string fpath = util::FilePath(filemanager::get_program_write_path(), path).GetString();
 		auto ptrReal = std::make_shared<VFilePtrInternalReal>();
 		if(ptrReal->Construct(fpath.c_str(), mode)) {
 			pfile = ptrReal;
@@ -587,6 +586,20 @@ bool FileManager::FindAbsolutePath(std::string path, std::string &rpath, fsys::S
 		return false;
 	rpath = std::move(paths.front());
 	return true;
+}
+
+bool FileManager::FindRelativePath(std::string path, std::string &rpath)
+{
+	util::Path ppath {path};
+	std::shared_lock lock {g_customMountMutex};
+	for(auto &rootPath : filemanager::get_absolute_root_paths()) {
+		auto appPath = util::DirPath(rootPath.GetString());
+		if(ppath.MakeRelative(appPath)) {
+			rpath = ppath.GetString();
+			return true;
+		}
+	}
+	return false;
 }
 
 bool FileManager::AbsolutePathToCustomMountPath(const std::string &strPath, std::string &outMountPath, std::string &relativePath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
