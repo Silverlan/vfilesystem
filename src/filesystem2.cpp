@@ -36,7 +36,6 @@ extern "C" {
 #undef CreateFile
 
 static std::unique_ptr<fsys::RootPathFileCacheManager> g_rootPathFileCacheManager {};
-static std::vector<util::Path> g_absoluteRootPaths {};
 void filemanager::set_use_file_index_cache(bool useCache)
 {
 	if(!useCache) {
@@ -134,13 +133,6 @@ std::optional<std::string> filemanager::read_file(const std::string_view &path)
 template<class T>
 T filemanager::open_file(const std::string_view &path, FileMode mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags);
 
-std::string filemanager::get_program_path() { return util::get_program_path(); }
-std::string filemanager::get_program_write_path()
-{
-	if(!g_absoluteRootPaths.empty())
-		return g_absoluteRootPaths.front().GetString();
-	return get_program_path();
-}
 void filemanager::add_custom_mount_directory(const std::string_view &cpath, fsys::SearchFlags searchMode) { FileManager::AddCustomMountDirectory(cpath.data(), searchMode); }
 void filemanager::add_custom_mount_directory(const std::string_view &cpath, bool bAbsolutePath, fsys::SearchFlags searchMode) { FileManager::AddCustomMountDirectory(cpath.data(), bAbsolutePath, searchMode); }
 void filemanager::remove_custom_mount_directory(const std::string_view &path) { FileManager::RemoveCustomMountDirectory(path.data()); }
@@ -202,30 +194,6 @@ void filemanager::find_system_files(const std::string_view &path, std::vector<st
 bool filemanager::copy_file(const std::string_view &cfile, const std::string_view &cfNewPath) { return FileManager::CopyFile(cfile.data(), cfNewPath.data()); }
 bool filemanager::copy_system_file(const std::string_view &cfile, const std::string_view &cfNewPath) { return FileManager::CopySystemFile(cfile.data(), cfNewPath.data()); }
 bool filemanager::move_file(const std::string_view &cfile, const std::string_view &cfNewPath) { return FileManager::MoveFile(cfile.data(), cfNewPath.data()); }
-void filemanager::set_absolute_root_path(const std::string_view &path)
-{
-	auto dirPath = util::DirPath(path);
-	if(g_absoluteRootPaths.empty())
-		g_absoluteRootPaths.push_back(dirPath);
-	else
-		g_absoluteRootPaths.front() = dirPath;
-	return FileManager::SetAbsoluteRootPath(dirPath.GetString());
-}
-void filemanager::add_secondary_absolute_read_only_root_path(const std::string &identifier, const std::string_view &path)
-{
-	auto dirPath = util::DirPath(path);
-	g_absoluteRootPaths.push_back(dirPath);
-
-	if(!g_rootPathFileCacheManager)
-		return;
-	g_rootPathFileCacheManager->AddRootReadOnlyLocation(identifier, dirPath.GetString());
-}
-const util::Path &filemanager::get_absolute_primary_root_path()
-{
-	assert(!g_absoluteRootPaths.empty());
-	return g_absoluteRootPaths.front();
-}
-const std::vector<util::Path> &filemanager::get_absolute_root_paths() { return g_absoluteRootPaths; }
 void filemanager::set_root_path(const std::string_view &path) { return FileManager::SetRootPath(std::string {path}); }
 std::string filemanager::get_root_path() { return FileManager::GetRootPath(); }
 

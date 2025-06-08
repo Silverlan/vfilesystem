@@ -246,8 +246,8 @@ namespace filemanager {
 	DLLFSYSTEM bool copy_file(const std::string_view &cfile, const std::string_view &cfNewPath);
 	DLLFSYSTEM bool copy_system_file(const std::string_view &cfile, const std::string_view &cfNewPath);
 	DLLFSYSTEM bool move_file(const std::string_view &cfile, const std::string_view &cfNewPath);
-	DLLFSYSTEM void set_absolute_root_path(const std::string_view &path);
-	DLLFSYSTEM void add_secondary_absolute_read_only_root_path(const std::string &identifier, const std::string_view &path);
+	DLLFSYSTEM void set_absolute_root_path(const std::string_view &path, int32_t mountPriority = -1);
+	DLLFSYSTEM void add_secondary_absolute_read_only_root_path(const std::string &identifier, const std::string_view &path, int32_t mountPriority = -1);
 	DLLFSYSTEM const util::Path &get_absolute_primary_root_path();
 	DLLFSYSTEM const std::vector<util::Path> &get_absolute_root_paths();
 	DLLFSYSTEM void set_root_path(const std::string_view &path);
