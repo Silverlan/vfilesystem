@@ -16,6 +16,7 @@ pr_add_library(${PROJ_NAME} ${LIB_TYPE})
 pr_add_dependency(${PROJ_NAME} sharedutils TARGET PUBLIC)
 pr_add_dependency(${PROJ_NAME} bz2 TARGET)
 pr_add_dependency(${PROJ_NAME} lzma TARGET)
+pr_add_dependency(${PROJ_NAME} efsw TARGET)
 
 pr_add_headers(${PROJ_NAME} "include/")
 if(WIN32)
