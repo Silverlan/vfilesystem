@@ -570,10 +570,13 @@ std::vector<std::string> FileManager::FindAbsolutePaths(std::string path, fsys::
 					paths.reserve(paths.size() * 2 + 5);
 				paths.push_back(std::move(rpath));
 				if(exitEarly)
-					break;
+					goto endLoop;
 			}
 		}
 	}
+
+endLoop:
+
 	return paths;
 }
 
