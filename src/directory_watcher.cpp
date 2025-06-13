@@ -83,7 +83,7 @@ void DirectoryWatchListener::handleFileAction( efsw::WatchID watchid, const std:
 			//			<< std::endl;
 			break;
 		case efsw::Actions::Modified: {
-			auto path = util::FilePath(filename);
+			auto path = util::FilePath(dir, filename);
 			path.MakeRelative(m_rootPath);
 			auto &normPath = path.GetString();
 			std::unique_lock lock {m_fileMutex};
