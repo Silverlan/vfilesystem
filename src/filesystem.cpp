@@ -926,8 +926,13 @@ DLLFSYSTEM bool FileManager::CreateSystemDirectory(const char *dir)
 	const char *pSub = p.c_str();
 	struct stat st = {0};
 	if(stat(pSub, &st) == -1) {
-		if(!std::filesystem::create_directory(pSub))
+		try {
+			if(!std::filesystem::create_directory(pSub))
+				return false;
+		}
+		catch(const std::filesystem::filesystem_error &err) {
 			return false;
+		}
 	}
 #else
 	auto wstr = string_to_wstring(p);
