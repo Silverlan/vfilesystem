@@ -365,7 +365,13 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *op
 	m_file = nullptr;
 	_wfopen_s(&m_file, wpath->data(), wmode.data());
 #else
-	m_file = fcaseopen(sPath.c_str(), mode);
+	auto *cpath = sPath.c_str();
+	char *r = static_cast<char*>(alloca(strlen(cpath) + 3));
+	if (casepath(path, r))
+	{
+		sPath = r;
+		m_file = fopen(r, mode);
+	}
 #endif
 
 	if(m_file == NULL) {
@@ -387,7 +393,7 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *op
 		return false;
 	}
 
-	m_path = sPath;
+	m_path = std::move(sPath);
 	long long cur = ftell(m_file);
 	fseek(m_file, 0, SEEK_END);
 	m_size = ftell(m_file);
