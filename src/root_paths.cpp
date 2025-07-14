@@ -15,6 +15,21 @@ struct RootPathInfo {
 static std::vector<RootPathInfo> g_absoluteRootPaths {};
 static std::vector<util::Path> g_orderedAbsoluteRootPaths {};
 
+static std::string resolve_home_dir(const std::string_view &sv, bool filePath) {
+#ifdef __linux__
+	if (sv.empty() || sv.front() != '~')
+		return std::string{sv};
+	auto strHome = util::get_env_variable("HOME");
+	if (!strHome)
+		return std::string {sv};
+	if (filePath)
+		return util::FilePath(*strHome, sv.substr(1)).GetString();
+	return util::DirPath(*strHome, sv.substr(1)).GetString();
+#else
+	return std::string{sv};
+#endif
+}
+
 static void update_ordered_absolute_root_paths()
 {
     std::vector<std::pair<size_t, int32_t>> orderedList;
@@ -40,17 +55,17 @@ std::string filemanager::get_program_write_path()
 }
 void filemanager::set_absolute_root_path(const std::string_view &path, int32_t mountPriority)
 {
-	auto dirPath = util::DirPath(path);
+	auto dirPath = util::DirPath(resolve_home_dir(path, false));
 	if(g_absoluteRootPaths.empty())
-		g_absoluteRootPaths.push_back({"root", std::string {path}, mountPriority});
+		g_absoluteRootPaths.push_back({"root", dirPath.GetString(), mountPriority});
 	else
-		g_absoluteRootPaths.front() = {"root", std::string {path}, mountPriority};
+		g_absoluteRootPaths.front() = {"root", dirPath.GetString(), mountPriority};
     update_ordered_absolute_root_paths();
 	return FileManager::SetAbsoluteRootPath(dirPath.GetString());
 }
 void filemanager::add_secondary_absolute_read_only_root_path(const std::string &identifier, const std::string_view &path, int32_t mountPriority)
 {
-	auto dirPath = util::DirPath(path);
+	auto dirPath = util::DirPath(resolve_home_dir(path, false));
 	g_absoluteRootPaths.push_back({identifier, dirPath, mountPriority});
     update_ordered_absolute_root_paths();
 
