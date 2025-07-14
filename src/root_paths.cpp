@@ -56,6 +56,7 @@ std::string filemanager::get_program_write_path()
 void filemanager::set_absolute_root_path(const std::string_view &path, int32_t mountPriority)
 {
 	auto dirPath = util::DirPath(resolve_home_dir(path, false));
+	filemanager::create_system_path({}, dirPath.GetString());
 	if(g_absoluteRootPaths.empty())
 		g_absoluteRootPaths.push_back({"root", dirPath.GetString(), mountPriority});
 	else
@@ -66,6 +67,7 @@ void filemanager::set_absolute_root_path(const std::string_view &path, int32_t m
 void filemanager::add_secondary_absolute_read_only_root_path(const std::string &identifier, const std::string_view &path, int32_t mountPriority)
 {
 	auto dirPath = util::DirPath(resolve_home_dir(path, false));
+	filemanager::create_system_path({}, dirPath.GetString());
 	g_absoluteRootPaths.push_back({identifier, dirPath, mountPriority});
     update_ordered_absolute_root_paths();
 
