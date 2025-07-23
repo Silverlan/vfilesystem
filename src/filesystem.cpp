@@ -888,7 +888,7 @@ static bool create_path(const std::string &root, const char *path)
 		pos = p.find_first_of(DIR_SEPARATOR, pos + 1);
 #ifdef __linux__
 		struct stat st = {0};
-		std::string subPath = FileManager::GetSubPath(p.substr(0, pos));
+		std::string subPath = FileManager::GetSubPath(root, p.substr(0, pos));
 		std::replace(subPath.begin(), subPath.end(), '\\', '/');
 		const char *pSub = subPath.c_str();
 		if(stat(pSub, &st) == -1) {
