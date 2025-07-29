@@ -202,6 +202,10 @@ namespace filemanager {
 	DLLFSYSTEM bool is_file_index_cache_enabled();
 	DLLFSYSTEM void reset_file_index_cache();
 
+	DLLFSYSTEM bool clone_to_program_write_path(const std::string_view &path, bool overwriteIfExists = false);
+	DLLFSYSTEM bool make_executable(const std::string_view &path);
+	DLLFSYSTEM bool is_executable(const std::string_view &path);
+
 	template<class T>
 	T open_file(const std::string_view &path, FileMode mode, std::string *optOutErr = nullptr, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
 

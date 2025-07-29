@@ -1239,6 +1239,8 @@ bool FileManager::CopySystemFile(const char *cfile, const char *cfNewPath)
 		tgt->Write(&data[0], size);
 	}
 	delete[] data;
+	if (filemanager::is_executable(file))
+		filemanager::make_executable(fNewPath);
 	return true;
 }
 
@@ -1264,6 +1266,10 @@ bool FileManager::CopyFile(const char *cfile, const char *cfNewPath)
 		tgt->Write(&data[0], size);
 	}
 	delete[] data;
+	auto *srcR = dynamic_cast<VFilePtrInternalReal*>(src.get());
+	auto *tgtR = dynamic_cast<VFilePtrInternalReal*>(tgt.get());
+	if (srcR && tgtR && filemanager::is_executable(srcR->GetPath()))
+		filemanager::make_executable(tgtR->GetPath());
 	return true;
 }
 DLLFSYSTEM bool FileManager::MoveFile(const char *cfile, const char *cfNewPath)
