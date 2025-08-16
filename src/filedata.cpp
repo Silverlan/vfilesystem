@@ -4,6 +4,7 @@
 #include "fsys/filesystem.h"
 #ifdef __linux__
 #include "fcaseopen.h"
+#include <sys/stat.h>
 #endif
 #include <sharedutils/util_string.h>
 #include <cstring>
@@ -142,10 +143,8 @@ std::string VFilePtrInternal::ReadLine()
 	unsigned char c;
 	std::string name = "";
 	c = Read<char>();
-	if(c == '\n') {
-		name += c;
+	if(c == '\n')
 		return name;
-	}
 	bool bRemoveComments = ShouldRemoveComments();
 	while(c != '\0' && !Eof()) {
 		if(RemoveComments(c, bRemoveComments) && Eof())
