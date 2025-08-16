@@ -404,7 +404,7 @@ DLLFSYSTEM VFilePtr FileManager::OpenFile(const char *cpath, const char *mode, s
 			std::string mountPath;
 			while(bFound == false && it.GetNextDirectory(mountPath, includeFlags, excludeFlags, bAbsolute)) {
 				fpath = GetNormalizedPath(mountPath + DIR_SEPARATOR + path);
-				bFound = ((update_file_insensitive_path_components_and_get_flags(appPath, mountPath, bAbsolute, path) & FVFILE_INVALID) == 0) ? true : false;
+				bFound = ((update_file_insensitive_path_components_and_get_flags(appPath, mountPath, bAbsolute, path) & (FVFILE_INVALID | FVFILE_DIRECTORY)) == 0) ? true : false;
 			}
 		}
 		if(bFound) {

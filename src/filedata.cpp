@@ -347,6 +347,21 @@ VFilePtrInternalReal::~VFilePtrInternalReal()
 }
 const std::string &VFilePtrInternalReal::GetPath() const { return m_path; }
 
+#ifdef __linux__
+static bool is_directory(FILE *f)
+{
+	if (!f)
+		return false;
+	int fd = fileno(f);
+	if (fd == -1)
+		return false;
+	struct stat st;
+	if (fstat(fd, &st) != 0)
+		return false;
+	return S_ISDIR(st.st_mode);
+}
+#endif
+
 bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *optOutErrno, std::string *optOutErr)
 {
 	std::string sPath = path;
@@ -392,6 +407,18 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *op
 #endif
 		return false;
 	}
+
+#ifdef __linux__
+	// Linux allows opening directories as files, but we want to
+	// disallow that.
+	if (is_directory(m_file)) {
+		if(optOutErrno)
+			*optOutErrno = EISDIR;
+		if(optOutErr)
+			*optOutErr = std::strerror(EISDIR);
+		return false;
+	}
+#endif
 
 	m_path = std::move(sPath);
 	long long cur = ftell(m_file);
