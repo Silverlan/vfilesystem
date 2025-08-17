@@ -90,20 +90,20 @@ bool filemanager::clone_to_program_write_path(const std::string_view &path, bool
 {
 	auto programPath = util::DirPath(filemanager::get_program_path());
 	auto writePath = util::DirPath(filemanager::get_program_write_path());
-	if (writePath == programPath)
+	if(writePath == programPath)
 		return true; // Nothing to do
 	auto dstPath = util::FilePath(writePath, path);
 	if(!overwriteIfExists) {
-		if (exists_system(dstPath.GetString()))
+		if(exists_system(dstPath.GetString()))
 			return true; // File already exists at destination, nothing to do
 	}
 	auto srcPath = util::FilePath(programPath, path);
-	if (exists_system(srcPath.GetString()) == false)
+	if(exists_system(srcPath.GetString()) == false)
 		return false; // Source file doesn't exist
 	try {
 		std::filesystem::create_directories(dstPath.GetPath());
 	}
-	catch (const std::filesystem::filesystem_error &e) {
+	catch(const std::filesystem::filesystem_error &e) {
 		// Ignore errors
 	}
 	return copy_system_file(srcPath.GetString(), dstPath.GetString());
@@ -117,13 +117,12 @@ bool filemanager::is_executable(const std::string_view &path)
 	// First: make sure the file exists and is a regular file
 	std::error_code ec;
 	auto st = std::filesystem::status(path, ec);
-	if (ec || !std::filesystem::is_regular_file(st))
+	if(ec || !std::filesystem::is_regular_file(st))
 		return false;
 
 	// On POSIX, check any of the exec bits (owner, group, others)
 	auto perms = st.permissions();
-	constexpr auto exec_bits =
-		std::filesystem::perms::owner_exec | std::filesystem::perms::group_exec | std::filesystem::perms::others_exec;
+	constexpr auto exec_bits = std::filesystem::perms::owner_exec | std::filesystem::perms::group_exec | std::filesystem::perms::others_exec;
 	return (perms & exec_bits) != std::filesystem::perms::none;
 #endif
 }
@@ -134,13 +133,10 @@ bool filemanager::make_executable(const std::string_view &path)
 	return true;
 #else
 	try {
-		std::filesystem::permissions(
-			path,
-			std::filesystem::perms::owner_exec | std::filesystem::perms::group_exec | std::filesystem::perms::others_exec,
-			std::filesystem::perm_options::add);
+		std::filesystem::permissions(path, std::filesystem::perms::owner_exec | std::filesystem::perms::group_exec | std::filesystem::perms::others_exec, std::filesystem::perm_options::add);
 		return true;
 	}
-	catch (const std::filesystem::filesystem_error &err) {
+	catch(const std::filesystem::filesystem_error &err) {
 		// Ignore the error
 	}
 	return false;

@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
 extern FILE *fcaseopen(char const *path, char const *mode);
-extern FILE *fcasereopen(FILE **f,char const *path, char const *mode);
+extern FILE *fcasereopen(FILE **f, char const *path, char const *mode);
 extern int casepath(char const *path, char *r);
 
 extern void casechdir(char const *path);
