@@ -32,7 +32,6 @@ extern "C" {
 #include <shared_mutex>
 #include <iostream>
 
-#pragma optimize("", off)
 std::optional<std::wstring> string_to_wstring(const std::string &str)
 {
 	try {
@@ -1427,4 +1426,3 @@ int VFilePtrInternalVirtual::ReadChar()
 	m_offset++;
 	return c;
 }
-#pragma optimize("", on)
