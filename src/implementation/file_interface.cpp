@@ -1,14 +1,20 @@
 // SPDX-FileCopyrightText: (c) 2021 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "fsys/ifile.hpp"
+module;
+
+#include <string>
+
+module pragma.filesystem;
+
+import :file_interface;
 
 fsys::File::File(const ::VFilePtr &f) : m_file {f} {}
 size_t fsys::File::Read(void *data, size_t size) { return m_file->Read(data, size); }
 size_t fsys::File::Write(const void *data, size_t size)
 {
 	auto type = m_file->GetType();
-	if(type != VFILE_LOCAL)
+	if(type != EVFile::Local)
 		return 0;
 	return static_cast<VFilePtrInternalReal *>(m_file.get())->Write(data, size);
 }

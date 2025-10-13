@@ -1,11 +1,15 @@
 // SPDX-FileCopyrightText: (c) 2025 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "fsys/filesystem.h"
-#include "fsys/file_index_cache.hpp"
-#include <sharedutils/util.h>
-#include <sharedutils/util_path.hpp>
+module;
+
 #include <cassert>
+#include <string>
+#include <filesystem>
+
+module pragma.filesystem;
+
+import :file_system;
 
 struct RootPathInfo {
 	std::string identifier;

@@ -1,12 +1,15 @@
 // SPDX-FileCopyrightText: (c) 2019 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "fsys/filesystem.h"
-#include "fsys/fsys_package.hpp"
-#include "impl_fsys_util.hpp"
-#include <sharedutils/util_string.h>
-#include <sharedutils/util_file.h>
+module;
+
 #include <array>
+#include <string>
+
+module pragma.filesystem;
+
+import :package;
+import :util;
 
 fsys::Package::Package(fsys::SearchFlags searchFlags) : m_searchFlags(searchFlags) {}
 fsys::SearchFlags fsys::Package::GetSearchFlags() const { return m_searchFlags; }

@@ -1,16 +1,20 @@
 // SPDX-FileCopyrightText: (c) 2019 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "fsys/directory_watcher.h"
-#include "mathutil/umath.h"
+module;
+
 #include <memory>
 #include <chrono>
 #include <mutex>
 #include <unordered_map>
-#include <sharedutils/util.h>
-#include <sharedutils/util_path.hpp>
 #include <efsw/efsw.hpp>
 #include <assert.h>
+
+module pragma.filesystem;
+
+import :file_system;
+import :directory_watcher;
+import pragma.util;
 
 namespace filemanager {
 	class DirectoryWatcherManager : public std::enable_shared_from_this<DirectoryWatcherManager> {

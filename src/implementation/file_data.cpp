@@ -1,13 +1,20 @@
 // SPDX-FileCopyrightText: (c) 2019 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "fsys/filesystem.h"
+module;
+
 #ifdef __linux__
-#include "fcaseopen.h"
 #include <sys/stat.h>
+#elif _WIN32
+#include <Windows.h>
 #endif
-#include <sharedutils/util_string.h>
 #include <cstring>
+#include <algorithm>
+#include <string>
+
+module pragma.filesystem;
+
+import :file_system;
 
 std::optional<std::wstring> string_to_wstring(const std::string &str);
 
@@ -49,7 +56,7 @@ void VDirectory::Remove(VData *file)
 VFilePtrInternal::VFilePtrInternal() : m_bRead(false), m_bBinary(false) {}
 VFilePtrInternal::~VFilePtrInternal() {}
 bool VFilePtrInternal::ShouldRemoveComments() { return (m_bRead == true && m_bBinary == false) ? true : false; }
-unsigned char VFilePtrInternal::GetType() { return m_type; }
+EVFile VFilePtrInternal::GetType() const { return m_type; }
 size_t VFilePtrInternal::Read(void *, size_t) { return 0; }
 size_t VFilePtrInternal::Read(void *ptr, size_t size, size_t nmemb) { return Read(ptr, size * nmemb); }
 unsigned long long VFilePtrInternal::Tell() { return 0; }
@@ -67,17 +74,18 @@ void VFilePtrInternal::Seek(unsigned long long offset, int whence)
 int VFilePtrInternal::Eof() { return 0; }
 int VFilePtrInternal::ReadChar() { return 0; }
 unsigned long long VFilePtrInternal::GetSize() { return 0; }
-unsigned int VFilePtrInternal::GetFlags()
+
+fsys::FVFile VFilePtrInternal::GetFlags() const
 {
-	unsigned int flags = 0;
+	fsys::FVFile flags = fsys::FVFile::None;
 	switch(m_type) {
-	case VFILE_VIRTUAL:
-		flags |= (FVFILE_READONLY | FVFILE_VIRTUAL);
+	case EVFile::Virtual:
+		flags |= (fsys::FVFile::ReadOnly | fsys::FVFile::Virtual);
 		break;
-	case VFILE_LOCAL:
+	case EVFile::Local:
 		break;
-	case VFILE_PACKAGE:
-		flags |= (FVFILE_READONLY | FVFILE_PACKAGE);
+	case EVFile::Package:
+		flags |= (fsys::FVFile::ReadOnly | fsys::FVFile::Package);
 		break;
 	}
 	return flags;
@@ -322,7 +330,7 @@ void VFilePtrInternal::IgnoreComments(std::string start, std::string end)
 VFilePtrInternalVirtual::VFilePtrInternalVirtual(VFile *file) : VFilePtrInternal()
 {
 	m_offset = 0;
-	m_type = VFILE_VIRTUAL;
+	m_type = EVFile::Virtual;
 	m_file = file;
 }
 VFilePtrInternalVirtual::~VFilePtrInternalVirtual() {}
@@ -334,7 +342,7 @@ std::shared_ptr<std::vector<uint8_t>> VFilePtrInternalVirtual::GetData() const {
 VFilePtrInternalReal::VFilePtrInternalReal() : VFilePtrInternal()
 {
 	VFilePtrInternal();
-	m_type = VFILE_LOCAL;
+	m_type = EVFile::Local;
 	m_file = NULL;
 	m_size = 0;
 	m_path = "";

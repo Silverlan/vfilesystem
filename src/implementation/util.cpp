@@ -1,10 +1,13 @@
 // SPDX-FileCopyrightText: (c) 2019 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "impl_fsys_util.hpp"
-#ifdef __linux__
-#include "fcaseopen.h"
-#endif
+module;
+
+#include <string>
+
+module pragma.filesystem;
+
+import :util;
 
 bool fsys::impl::has_value(std::vector<std::string> *values, size_t start, size_t end, std::string val, bool bKeepCase)
 {

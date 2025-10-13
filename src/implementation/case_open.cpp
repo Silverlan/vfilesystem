@@ -20,7 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "fcaseopen.h"
+module;
+
+#include <stdio.h>
 
 // Source: https://github.com/OneSadCookie/fcaseopen
 #if !defined(_WIN32)
@@ -30,6 +32,10 @@ THE SOFTWARE.
 #include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
+
+module pragma.filesystem;
+
+import :case_open;
 
 // r must have strlen(path) + 3 bytes
 int casepath(char const *path, char *r)
@@ -95,6 +101,12 @@ int casepath(char const *path, char *r)
 		closedir(d);
 	return 1;
 }
+#else
+#include <direct.h>
+
+module pragma.filesystem;
+
+import :case_open;
 #endif
 
 FILE *fcaseopen(char const *path, char const *mode)
