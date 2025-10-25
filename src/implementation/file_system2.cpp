@@ -3,6 +3,9 @@
 
 module;
 
+#include <optional>
+#include <vector>
+
 #ifdef __linux__
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -44,6 +47,13 @@ void filemanager::set_use_file_index_cache(bool useCache)
 }
 fsys::RootPathFileCacheManager *filemanager::get_root_path_file_cache_manager() { return g_rootPathFileCacheManager.get(); }
 unsigned long long get_file_attributes(const std::string &fpath);
+
+#ifdef __linux__
+#define FILE_ATTRIBUTE_NORMAL 0x80
+#define FILE_ATTRIBUTE_DIRECTORY 0x10
+#define INVALID_FILE_ATTRIBUTES ((unsigned int)-1)
+#endif
+
 static void update_file_index_cache(const std::string_view &path, bool absolutePath, std::optional<fsys::FileIndexCache::Type> forceAddType)
 {
 	if(!g_rootPathFileCacheManager)

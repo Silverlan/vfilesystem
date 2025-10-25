@@ -3,6 +3,10 @@
 
 module;
 
+#include <algorithm>
+
+#include <vector>
+
 #include <cassert>
 #include <string>
 #include <filesystem>

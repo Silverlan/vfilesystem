@@ -3,6 +3,8 @@
 
 module;
 
+#include <optional>
+
 #include <string>
 
 module pragma.filesystem;

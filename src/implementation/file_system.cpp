@@ -3,6 +3,8 @@
 
 module;
 
+#include <optional>
+
 #include "fsys/fsys_definitions.hpp"
 #ifdef __linux__
 #include <sys/types.h>
@@ -57,7 +59,7 @@ static fsys::FVFile get_file_flags(const std::string &fpath)
 		fsys::FVFile flags = fsys::FVFile::None;
 		const bool isDir = (st.st_mode & S_IFDIR) != 0;
 		if(isDir == true)
-			flags |= FVFile::Directory;
+			flags |= fsys::FVFile::Directory;
 		return flags;
 	}
 #else
@@ -1087,6 +1089,12 @@ bool FileManager::Exists(std::string name, fsys::SearchFlags includeFlags, fsys:
 	}
 	return false;
 }
+
+#ifdef __linux__
+#define FILE_ATTRIBUTE_NORMAL 0x80
+#define FILE_ATTRIBUTE_DIRECTORY 0x10
+#define INVALID_FILE_ATTRIBUTES ((unsigned int)-1)
+#endif
 
 unsigned long long get_file_attributes(const std::string &fpath)
 {

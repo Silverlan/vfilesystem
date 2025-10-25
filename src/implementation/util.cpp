@@ -3,10 +3,15 @@
 
 module;
 
+#include <vector>
+
 #include <string>
 
 module pragma.filesystem;
 
+#ifdef __linux__
+import :case_open;
+#endif
 import :util;
 
 bool fsys::impl::has_value(std::vector<std::string> *values, size_t start, size_t end, std::string val, bool bKeepCase)

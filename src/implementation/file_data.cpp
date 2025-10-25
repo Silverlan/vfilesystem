@@ -3,6 +3,11 @@
 
 module;
 
+#include <cinttypes>
+#include <optional>
+#include <vector>
+#include <memory>
+
 #ifdef __linux__
 #include <sys/stat.h>
 #elif _WIN32
@@ -14,6 +19,9 @@ module;
 
 module pragma.filesystem;
 
+#ifdef __linux__
+import :case_open;
+#endif
 import :file_system;
 
 std::optional<std::wstring> string_to_wstring(const std::string &str);

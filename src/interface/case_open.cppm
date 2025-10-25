@@ -28,13 +28,9 @@ module;
 export module pragma.filesystem:case_open;
 
 export {
-    extern "C" {
+    FILE *fcaseopen(char const *path, char const *mode);
+    FILE *fcasereopen(FILE **f, char const *path, char const *mode);
+    int casepath(char const *path, char *r);
 
-    extern FILE *fcaseopen(char const *path, char const *mode);
-    extern FILE *fcasereopen(FILE **f, char const *path, char const *mode);
-    extern int casepath(char const *path, char *r);
-
-    extern void casechdir(char const *path);
-
-    }
+    void casechdir(char const *path);
 }
