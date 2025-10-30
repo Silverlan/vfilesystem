@@ -3,9 +3,10 @@
 
 module;
 
-#include <memory>
 
 export module pragma.filesystem:file_handle;
+
+export import std.compat;
 
 export {
     class VFilePtrInternal;

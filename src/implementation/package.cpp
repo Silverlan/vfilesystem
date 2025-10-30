@@ -3,10 +3,7 @@
 
 module;
 
-#include <vector>
 
-#include <array>
-#include <string>
 
 module pragma.filesystem;
 

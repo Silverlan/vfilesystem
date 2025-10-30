@@ -3,14 +3,8 @@
 
 module;
 
-#include <functional>
 
-#include <memory>
-#include <chrono>
-#include <mutex>
-#include <unordered_map>
 #include <efsw/efsw.hpp>
-#include <assert.h>
 
 module pragma.filesystem;
 

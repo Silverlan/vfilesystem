@@ -4,10 +4,10 @@
 module;
 
 #include "fsys/fsys_definitions.hpp"
-#include <vector>
-#include <string>
 
 export module pragma.filesystem:util;
+
+export import std.compat;
 
 export namespace fsys {
 	namespace impl {

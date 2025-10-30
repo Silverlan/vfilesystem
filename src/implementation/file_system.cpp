@@ -3,7 +3,6 @@
 
 module;
 
-#include <optional>
 
 #include "fsys/fsys_definitions.hpp"
 #ifdef __linux__
@@ -18,15 +17,8 @@ module;
 #define DIR_SEPARATOR '\\'
 #define DIR_SEPARATOR_OTHER '/'
 #endif
-#include <functional>
-#include <filesystem>
 #include "bzlib_wrapper.hpp"
 
-#include <cstring>
-#include <array>
-#include <mutex>
-#include <shared_mutex>
-#include <iostream>
 
 module pragma.filesystem;
 

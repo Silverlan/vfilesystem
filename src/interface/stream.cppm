@@ -4,9 +4,6 @@
 module;
 
 #include "fsys/fsys_definitions.hpp"
-#include <iostream>
-#include <vector>
-#include <array>
 
 export module pragma.filesystem:stream;
 

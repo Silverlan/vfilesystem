@@ -4,10 +4,6 @@
 module;
 
 #include "fsys/fsys_definitions.hpp"
-#include <string>
-#include <stdexcept>
-#include <memory>
-#include <functional>
 
 export module pragma.filesystem:directory_watcher;
 

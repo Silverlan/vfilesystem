@@ -3,8 +3,6 @@
 
 module;
 
-#include <optional>
-#include <vector>
 
 #ifdef __linux__
 #include <sys/types.h>
@@ -19,11 +17,6 @@ module;
 #define DIR_SEPARATOR_OTHER '/'
 #endif
 #include "bzlib_wrapper.hpp"
-#include <cstring>
-#include <filesystem>
-#include <array>
-#include <iostream>
-#include <cassert>
 
 module pragma.filesystem;
 

@@ -3,9 +3,6 @@
 
 module;
 
-#include <cinttypes>
-#include <type_traits>
-#include <limits>
 
 export module pragma.filesystem:enums;
 

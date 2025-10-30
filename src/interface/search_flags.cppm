@@ -3,8 +3,6 @@
 
 module;
 
-#include <cinttypes>
-#include <type_traits>
 
 export module pragma.filesystem:search_flags;
 

@@ -3,19 +3,13 @@
 
 module;
 
-#include <cinttypes>
-#include <optional>
-#include <vector>
-#include <memory>
-
+#include <cstdio>
+#include <cerrno>
 #ifdef __linux__
 #include <sys/stat.h>
 #elif _WIN32
 #include <Windows.h>
 #endif
-#include <cstring>
-#include <algorithm>
-#include <string>
 
 module pragma.filesystem;
 
@@ -175,22 +169,22 @@ std::string VFilePtrInternal::ReadLine()
 char *VFilePtrInternal::ReadString(char *str, int num)
 {
 	if(Eof())
-		return NULL;
+		return nullptr;
 	int i = 0;
 	for(i = 0; i < num; i++) {
 		char c = Read<char>();
 		if(Eof())
-			return NULL;
+			return nullptr;
 		str[i] = c;
 		if(str[i] == '\n') {
 			if(i + 1 < num)
 				str[i + 1] = '\0';
 			else
-				return NULL;
+				return nullptr;
 			return str;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 unsigned long long VFilePtrInternal::FindFirstOf(const char *s)
 {
@@ -351,13 +345,13 @@ VFilePtrInternalReal::VFilePtrInternalReal() : VFilePtrInternal()
 {
 	VFilePtrInternal();
 	m_type = EVFile::Local;
-	m_file = NULL;
+	m_file = nullptr;
 	m_size = 0;
 	m_path = "";
 }
 VFilePtrInternalReal::~VFilePtrInternalReal()
 {
-	if(m_file != NULL)
+	if(m_file != nullptr)
 		fclose(m_file);
 }
 const std::string &VFilePtrInternalReal::GetPath() const { return m_path; }
@@ -396,14 +390,15 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *op
 	_wfopen_s(&m_file, wpath->data(), wmode.data());
 #else
 	auto *cpath = sPath.c_str();
-	char *r = static_cast<char *>(alloca(strlen(cpath) + 3));
-	if(casepath(path, r)) {
+	std::string r;
+	r.resize(sPath.length() + 3);          // same size as before (strlen(cpath) + 3)
+	if (casepath(path, r.data())) {
 		sPath = r;
-		m_file = fopen(r, mode);
+		m_file = fopen(r.c_str(), mode);
 	}
 #endif
 
-	if(m_file == NULL) {
+	if(m_file == nullptr) {
 #ifdef _WIN32
 		DWORD lastErr = GetLastError();
 		if(optOutErrno)
@@ -456,7 +451,7 @@ bool VFilePtrInternalReal::ReOpen(const char *mode)
 #endif
 	m_bBinary = FileManager::IsBinaryMode(mode);
 	m_bRead = !FileManager::IsWriteMode(mode);
-	if(m_file == NULL)
+	if(m_file == nullptr)
 		return false;
 	return true;
 }

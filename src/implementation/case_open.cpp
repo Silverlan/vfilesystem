@@ -22,16 +22,15 @@ THE SOFTWARE.
 
 module;
 
-#include <stdio.h>
 
 // Source: https://github.com/OneSadCookie/fcaseopen
 #if !defined(_WIN32)
-#include <stdlib.h>
-#include <string.h>
 
 #include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
+#include <string.h>
+#include <strings.h>
 
 module pragma.filesystem;
 
@@ -40,9 +39,12 @@ import :case_open;
 // r must have strlen(path) + 3 bytes
 int casepath(char const *path, char *r)
 {
-	size_t l = strlen(path);
-	char *p = (char*)alloca(l + 1);
-	strcpy(p, path);
+	size_t l = std::strlen(path);
+	std::string pbuf;
+	pbuf.resize(l + 1);
+	char *p = pbuf.data();
+	std::memcpy(p, path, l + 1);
+
 	size_t rl = 0;
 
 	DIR *d;
@@ -114,7 +116,9 @@ FILE *fcaseopen(char const *path, char const *mode)
 #if !defined(_WIN32)
 	FILE *f = fopen(path, mode);
 	if(!f) {
-		char *r = (char*)alloca(strlen(path) + 3);
+		std::string rbuf;
+		rbuf.resize(std::strlen(path) + 3);
+		char *r = rbuf.data();
 		if(casepath(path, r)) {
 			f = fopen(r, mode);
 		}
@@ -131,7 +135,9 @@ FILE *fcasereopen(FILE **f, char const *path, char const *mode)
 #if !defined(_WIN32)
 	*f = freopen(path, mode, *f);
 	if(!f) {
-		char *r = (char*)alloca(strlen(path) + 3);
+		std::string rbuf;
+		rbuf.resize(std::strlen(path) + 3);
+		char *r = rbuf.data();
 		if(casepath(path, r)) {
 			*f = freopen(r, mode, *f);
 		}
@@ -146,7 +152,9 @@ FILE *fcasereopen(FILE **f, char const *path, char const *mode)
 void casechdir(char const *path)
 {
 #if !defined(_WIN32)
-	char *r = (char*)alloca(strlen(path) + 3);
+	std::string rbuf;
+	rbuf.resize(std::strlen(path) + 3);
+	char *r = rbuf.data();
 	if(casepath(path, r)) {
 		chdir(r);
 	}

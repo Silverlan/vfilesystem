@@ -3,10 +3,7 @@
 
 module;
 
-#include <memory>
 
-#include <cstring>
-#include <iostream>
 
 module pragma.filesystem;
 

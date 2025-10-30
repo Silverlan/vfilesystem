@@ -4,14 +4,11 @@
 module;
 
 #include "fsys/fsys_definitions.hpp"
-#include <iostream>
-#include <filesystem>
-#include <optional>
-#include <unordered_map>
-#include <condition_variable>
 #include <sharedutils/ctpl_stl.h>
 
 export module pragma.filesystem:file_index_cache;
+
+export import std.compat;
 
 export {
 	namespace fsys {

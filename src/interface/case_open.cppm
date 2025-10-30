@@ -23,9 +23,10 @@ THE SOFTWARE.
 module;
 
 // Source: https://github.com/OneSadCookie/fcaseopen
-#include <stdio.h>
 
 export module pragma.filesystem:case_open;
+
+export import std.compat;
 
 export {
     FILE *fcaseopen(char const *path, char const *mode);

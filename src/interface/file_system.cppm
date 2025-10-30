@@ -4,11 +4,6 @@
 module;
 
 #include "fsys/fsys_definitions.hpp"
-#include <optional>
-#include <filesystem>
-#include <memory>
-#include <functional>
-#include <string_view>
 
 export module pragma.filesystem:file_system;
 
