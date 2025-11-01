@@ -5,18 +5,25 @@ module;
 
 
 #include "fsys/fsys_definitions.hpp"
+
 #ifdef __linux__
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
 #define DIR_SEPARATOR '/'
 #define DIR_SEPARATOR_OTHER '\\'
-#else
+
+#elif _WIN32
+
 #include "Shlwapi.h"
 #define DIR_SEPARATOR '\\'
 #define DIR_SEPARATOR_OTHER '/'
+#include <wchar.h>
+
 #endif
+
 #include "bzlib_wrapper.hpp"
 
 

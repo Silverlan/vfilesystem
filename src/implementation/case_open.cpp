@@ -105,6 +105,7 @@ int casepath(char const *path, char *r)
 }
 #else
 #include <direct.h>
+#include <stdio.h>
 
 module pragma.filesystem;
 
