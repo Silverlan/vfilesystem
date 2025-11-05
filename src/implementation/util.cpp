@@ -3,8 +3,6 @@
 
 module;
 
-
-
 module pragma.filesystem;
 
 #ifdef __linux__
@@ -29,13 +27,13 @@ bool fsys::impl::has_value(std::vector<std::string> *values, size_t start, size_
 void fsys::impl::to_case_sensitive_path(std::string &inOutCaseInsensitivePath)
 {
 #ifdef __linux__
-	if (inOutCaseInsensitivePath.empty())
+	if(inOutCaseInsensitivePath.empty())
 		return;
 
 	std::string r;
 	r.resize(inOutCaseInsensitivePath.length() + 2);
 
-	if (casepath(inOutCaseInsensitivePath.c_str(), r.data()))
+	if(casepath(inOutCaseInsensitivePath.c_str(), r.data()))
 		inOutCaseInsensitivePath = r.c_str();
 #endif
 }

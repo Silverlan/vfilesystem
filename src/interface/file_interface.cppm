@@ -26,7 +26,7 @@ export {
 			virtual bool Eof() override;
 			virtual std::optional<std::string> GetFileName() const override;
 			::VFilePtr &GetFile() { return m_file; }
-		private:
+		  private:
 			::VFilePtr m_file;
 		};
 	};

@@ -4,5 +4,5 @@
 #pragma once
 
 extern "C" {
-    #include "bzlib.h"
+#include "bzlib.h"
 }

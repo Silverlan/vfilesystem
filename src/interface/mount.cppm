@@ -3,7 +3,6 @@
 
 module;
 
-
 export module pragma.filesystem:mount;
 
 export import :enums;
@@ -18,12 +17,12 @@ export {
 
 	class FileManager;
 	class MountIterator {
-	public:
+	  public:
 		friend FileManager;
-	private:
+	  private:
 		std::vector<MountDirectory> *m_directories;
 		size_t m_index;
-	protected:
+	  protected:
 		MountIterator(std::vector<MountDirectory> &directories);
 		void operator++();
 		bool IsValid();

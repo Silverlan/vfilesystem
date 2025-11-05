@@ -3,7 +3,6 @@
 
 module;
 
-
 #include "definitions.hpp"
 
 #ifdef __linux__
@@ -25,7 +24,6 @@ module;
 #endif
 
 #include "bzlib_wrapper.hpp"
-
 
 module pragma.filesystem;
 

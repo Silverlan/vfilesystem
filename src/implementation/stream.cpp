@@ -3,8 +3,6 @@
 
 module;
 
-
-
 module pragma.filesystem;
 
 import :stream;

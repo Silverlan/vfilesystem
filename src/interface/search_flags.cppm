@@ -3,7 +3,6 @@
 
 module;
 
-
 export module pragma.filesystem:search_flags;
 
 import pragma.math;

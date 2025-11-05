@@ -391,8 +391,8 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *op
 #else
 	auto *cpath = sPath.c_str();
 	std::string r;
-	r.resize(sPath.length() + 3);          // same size as before (strlen(cpath) + 3)
-	if (casepath(path, r.data())) {
+	r.resize(sPath.length() + 3); // same size as before (strlen(cpath) + 3)
+	if(casepath(path, r.data())) {
 		sPath = r;
 		m_file = fopen(r.c_str(), mode);
 	}

@@ -13,16 +13,16 @@ export import :file_handle;
 export {
 	namespace fsys {
 		class DLLFSYSTEM Package {
-		public:
+		  public:
 			virtual ~Package() = default;
 			fsys::SearchFlags GetSearchFlags() const;
-		protected:
+		  protected:
 			Package(fsys::SearchFlags searchFlags);
-		private:
+		  private:
 			fsys::SearchFlags m_searchFlags = fsys::SearchFlags::None;
 		};
 		class DLLFSYSTEM PackageManager {
-		public:
+		  public:
 			PackageManager() = default;
 			virtual ~PackageManager() = default;
 			virtual Package *LoadPackage(std::string package, SearchFlags searchMode = SearchFlags::Local) = 0;
@@ -32,7 +32,7 @@ export {
 			virtual bool Exists(const std::string &name, SearchFlags includeFlags) const = 0;
 			virtual bool GetFileFlags(const std::string &name, SearchFlags includeFlags, fsys::FVFile &flags) const = 0;
 			virtual VFilePtr OpenFile(const std::string &path, bool bBinary, SearchFlags includeFlags, fsys::SearchFlags excludeFlags) const = 0;
-		protected:
+		  protected:
 			bool HasValue(std::vector<std::string> *values, size_t start, size_t end, std::string val, bool bKeepCase = false) const;
 		};
 	};

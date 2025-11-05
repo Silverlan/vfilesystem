@@ -3,7 +3,6 @@
 
 module;
 
-
 export module pragma.filesystem:enums;
 
 import pragma.math;
@@ -29,11 +28,7 @@ export {
 		struct enable_bitwise_operators<fsys::FVFile> : std::true_type {};
 	}
 
-	enum class EVFile : uint32_t {
-		Virtual = 0,
-		Local = 1,
-		Package = 2
-	};
+	enum class EVFile : uint32_t { Virtual = 0, Local = 1, Package = 2 };
 
 	namespace fsys {
 		enum class SearchFlags : uint32_t { None = 0, Virtual = 1, Package = 2, Local = 4, NoMounts = 8, LocalRoot = NoMounts | Local, All = static_cast<uint32_t>(-1) & ~NoMounts };

@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 module;
 
-
 // Source: https://github.com/OneSadCookie/fcaseopen
 #if !defined(_WIN32)
 

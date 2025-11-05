@@ -13,25 +13,25 @@ export import pragma.util;
 import pragma.math;
 
 export {
-	#pragma warning(push)
-	#pragma warning(disable : 4251)
+#pragma warning(push)
+#pragma warning(disable : 4251)
 	class DLLFSYSTEM VData {
-	private:
+	  private:
 		std::string m_name;
-	public:
+	  public:
 		VData(std::string name);
 		virtual bool IsFile();
 		virtual bool IsDirectory();
 		std::string GetName();
 	};
 
-	#undef CopyFile
-	#undef MoveFile
+#undef CopyFile
+#undef MoveFile
 
 	class DLLFSYSTEM VFile : public VData {
-	private:
+	  private:
 		std::shared_ptr<std::vector<uint8_t>> m_data;
-	public:
+	  public:
 		VFile(const std::string &name, const std::shared_ptr<std::vector<uint8_t>> &data);
 		bool IsFile();
 		unsigned long long GetSize();
@@ -39,9 +39,9 @@ export {
 	};
 
 	class DLLFSYSTEM VDirectory : public VData {
-	private:
+	  private:
 		std::vector<VData *> m_files;
-	public:
+	  public:
 		VDirectory(std::string name);
 		VDirectory();
 		~VDirectory();
@@ -56,9 +56,9 @@ export {
 
 	class DLLFSYSTEM FileManager;
 	class DLLFSYSTEM VFilePtrInternal {
-	public:
+	  public:
 		friend FileManager;
-	private:
+	  private:
 		struct Comment {
 			Comment(std::string cmt) : Comment(cmt, "\n") {}
 			Comment(std::string st, std::string en) : start(st), end(en) {}
@@ -67,13 +67,13 @@ export {
 			bool multiLine;
 		};
 		std::vector<Comment> m_comments;
-	protected:
+	  protected:
 		EVFile m_type;
 		bool m_bRead;
 		bool m_bBinary;
 		bool ShouldRemoveComments();
 		bool RemoveComments(unsigned char &c, bool bRemoveComments);
-	public:
+	  public:
 		VFilePtrInternal();
 		virtual ~VFilePtrInternal();
 		EVFile GetType() const;
@@ -110,10 +110,10 @@ export {
 	};
 
 	class DLLFSYSTEM VFilePtrInternalVirtual : public VFilePtrInternal {
-	private:
+	  private:
 		unsigned long long m_offset;
 		VFile *m_file;
-	public:
+	  public:
 		VFilePtrInternalVirtual(VFile *file);
 		virtual ~VFilePtrInternalVirtual() override;
 		size_t Read(void *ptr, size_t size) override;
@@ -126,9 +126,9 @@ export {
 		std::shared_ptr<std::vector<uint8_t>> GetData() const;
 	};
 
-	#undef CreateDirectory
-	#undef GetFileAttributes
-	#undef RemoveDirectory
+#undef CreateDirectory
+#undef GetFileAttributes
+#undef RemoveDirectory
 
 	struct MountDirectory;
 	namespace fsys {
@@ -245,7 +245,7 @@ export {
 	}
 
 	class DLLFSYSTEM FileManager {
-	private:
+	  private:
 		static VDirectory m_vroot;
 		static std::vector<MountDirectory> m_customMount;
 		static std::unordered_map<std::string, std::unique_ptr<fsys::PackageManager>> m_packages;
@@ -253,7 +253,7 @@ export {
 		static std::function<VFilePtr(const std::string &, const char *mode)> m_customFileHandler;
 		static VData *GetVirtualData(std::string path);
 		static std::vector<std::string> FindAbsolutePaths(std::string path, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags, bool exitEarly);
-	public:
+	  public:
 		static bool IsWriteMode(const char *mode);
 		static bool IsBinaryMode(const char *mode);
 		static VFilePtr OpenFile(const char *cpath, const char *mode, std::string *optOutErr = nullptr, fsys::SearchFlags includeFlags = fsys::SearchFlags::All, fsys::SearchFlags excludeFlags = fsys::SearchFlags::None);
@@ -339,11 +339,11 @@ export {
 	};
 
 	class DLLFSYSTEM VFilePtrInternalReal : public VFilePtrInternal {
-	private:
+	  private:
 		FILE *m_file;
 		unsigned long long m_size;
 		std::string m_path;
-	public:
+	  public:
 		VFilePtrInternalReal();
 		virtual ~VFilePtrInternalReal() override;
 		bool Construct(const char *path, const char *mode, int *optOutErrno = nullptr, std::string *optOutErr = nullptr);
@@ -373,5 +373,5 @@ export {
 		}
 	}
 
-	#pragma warning(pop)
+#pragma warning(pop)
 }

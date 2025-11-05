@@ -29,9 +29,9 @@ export module pragma.filesystem:case_open;
 export import std.compat;
 
 export {
-    FILE *fcaseopen(char const *path, char const *mode);
-    FILE *fcasereopen(FILE **f, char const *path, char const *mode);
-    int casepath(char const *path, char *r);
+	FILE *fcaseopen(char const *path, char const *mode);
+	FILE *fcasereopen(FILE **f, char const *path, char const *mode);
+	int casepath(char const *path, char *r);
 
-    void casechdir(char const *path);
+	void casechdir(char const *path);
 }
