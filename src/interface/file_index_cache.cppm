@@ -3,12 +3,11 @@
 
 module;
 
-#include "fsys/fsys_definitions.hpp"
-#include <sharedutils/ctpl_stl.h>
+#include "definitions.hpp"
 
 export module pragma.filesystem:file_index_cache;
 
-export import std.compat;
+export import pragma.util;
 
 export {
 	namespace fsys {

@@ -1,8 +1,7 @@
 // SPDX-FileCopyrightText: (c) 2019 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef __FSYS_DEFINITIONS_HPP__
-#define __FSYS_DEFINITIONS_HPP__
+#pragma once
 
 #ifdef VFILESYSTEM_STATIC
 #define DLLFSYSTEM
@@ -18,6 +17,4 @@
 #else
 #define DLLFSYSTEM __declspec(dllimport) // import DLL information
 #endif
-#endif
-
 #endif

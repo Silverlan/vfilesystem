@@ -3,10 +3,6 @@
 
 module;
 
-
-
-#include <sharedutils/magic_enum.hpp>
-
 module pragma.filesystem;
 
 import :file_index_cache;

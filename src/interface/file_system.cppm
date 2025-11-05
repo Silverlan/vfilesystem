@@ -3,7 +3,7 @@
 
 module;
 
-#include "fsys/fsys_definitions.hpp"
+#include "definitions.hpp"
 
 export module pragma.filesystem:file_system;
 
