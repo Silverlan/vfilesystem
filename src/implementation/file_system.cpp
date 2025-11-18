@@ -142,8 +142,7 @@ template<>
 #ifdef _WIN32
 DLLFSYSTEM
 #endif
-  VFilePtrReal
-  FileManager::OpenFile<VFilePtrReal>(const char *cpath, const char *mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
+  VFilePtrReal FileManager::OpenFile<VFilePtrReal>(const char *cpath, const char *mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
 {
 	return std::static_pointer_cast<VFilePtrInternalReal>(OpenFile(cpath, mode, optOutErr, includeFlags, excludeFlags));
 }
@@ -152,8 +151,7 @@ template<>
 #ifdef _WIN32
 DLLFSYSTEM
 #endif
-  VFilePtrVirtual
-  FileManager::OpenFile<VFilePtrVirtual>(const char *cpath, const char *mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
+  VFilePtrVirtual FileManager::OpenFile<VFilePtrVirtual>(const char *cpath, const char *mode, std::string *optOutErr, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags)
 {
 	return std::static_pointer_cast<VFilePtrInternalVirtual>(OpenFile(cpath, mode, optOutErr, includeFlags, excludeFlags));
 }
