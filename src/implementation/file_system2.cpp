@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: (c) 2021 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "fsys/filesystem.h"
+module;
+
 #ifdef __linux__
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -14,25 +15,17 @@
 #define DIR_SEPARATOR '\\'
 #define DIR_SEPARATOR_OTHER '/'
 #endif
+#include "bzlib_wrapper.hpp"
 
-extern "C" {
-#include "bzlib.h"
-}
+module pragma.filesystem;
 
-#include <cstring>
-#include <sharedutils/util_string.h>
-#include <sharedutils/util.h>
-#include <sharedutils/util_path.hpp>
-#include "fsys/fsys_searchflags.hpp"
-#include "fsys/fsys_package.hpp"
-#include "fsys/file_index_cache.hpp"
-#include "impl_fsys_util.hpp"
-#include <filesystem>
-#include <array>
-#include <iostream>
-#include <cassert>
+import :file_system;
 
+#undef CreateDirectory
+#undef GetFileAttributes
+#undef MoveFile
 #undef CreateFile
+#undef CopyFile
 
 static std::unique_ptr<fsys::RootPathFileCacheManager> g_rootPathFileCacheManager {};
 void filemanager::set_use_file_index_cache(bool useCache)
@@ -46,6 +39,13 @@ void filemanager::set_use_file_index_cache(bool useCache)
 }
 fsys::RootPathFileCacheManager *filemanager::get_root_path_file_cache_manager() { return g_rootPathFileCacheManager.get(); }
 unsigned long long get_file_attributes(const std::string &fpath);
+
+#ifdef __linux__
+#define FILE_ATTRIBUTE_NORMAL 0x80
+#define FILE_ATTRIBUTE_DIRECTORY 0x10
+#define INVALID_FILE_ATTRIBUTES ((unsigned int)-1)
+#endif
+
 static void update_file_index_cache(const std::string_view &path, bool absolutePath, std::optional<fsys::FileIndexCache::Type> forceAddType)
 {
 	if(!g_rootPathFileCacheManager)
@@ -239,7 +239,7 @@ bool filemanager::exists_system(const std::string_view &name) { return FileManag
 bool filemanager::is_system_file(const std::string_view &name) { return FileManager::IsSystemFile(std::string {name}); }
 bool filemanager::is_system_dir(const std::string_view &name) { return FileManager::IsSystemDir(std::string {name}); }
 std::uint64_t filemanager::get_file_attributes(const std::string_view &name) { return FileManager::GetFileAttributes(std::string {name}); }
-std::uint64_t filemanager::get_file_flags(const std::string_view &name, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FileManager::GetFileFlags(std::string {name}, includeFlags, excludeFlags); }
+fsys::FVFile filemanager::get_file_flags(const std::string_view &name, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags) { return FileManager::GetFileFlags(std::string {name}, includeFlags, excludeFlags); }
 std::string filemanager::get_normalized_path(const std::string_view &path) { return FileManager::GetNormalizedPath(std::string {path}); }
 void filemanager::find_files(const std::string_view &cfind, std::vector<std::string> *resfiles, std::vector<std::string> *resdirs, bool bKeepPath, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlag)
 {

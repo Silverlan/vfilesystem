@@ -18,13 +18,7 @@ pr_add_dependency(${PROJ_NAME} bz2 TARGET)
 pr_add_dependency(${PROJ_NAME} lzma TARGET)
 pr_add_dependency(${PROJ_NAME} efsw TARGET)
 
-pr_add_headers(${PROJ_NAME} "include/")
-if(WIN32)
-	# We don't need the .c-files on Windows, so we use a custom filter.
-	pr_add_sources(${PROJ_NAME} "src/" FILTER "src/*.cpp")
-else()
-	pr_add_sources(${PROJ_NAME} "src/")
-endif()
+pr_init_module(${PROJ_NAME})
 
 pr_add_compile_definitions(${PROJ_NAME} -DVFILESYSTEM_DLL)
 

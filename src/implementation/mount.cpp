@@ -1,8 +1,11 @@
 // SPDX-FileCopyrightText: (c) 2019 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "fsys/filesystem_mount.h"
-#include "fsys/filesystem.h"
+module;
+
+module pragma.filesystem;
+
+import :mount;
 
 MountDirectory::MountDirectory(const std::string &dir, bool _absolutePath, fsys::SearchFlags search) : directory(dir), searchMode(search), absolutePath(_absolutePath) {}
 

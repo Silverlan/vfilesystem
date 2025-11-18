@@ -1,13 +1,22 @@
 // SPDX-FileCopyrightText: (c) 2019 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "fsys/filesystem.h"
+module;
+
+#include <cstdio>
+#include <cerrno>
 #ifdef __linux__
-#include "fcaseopen.h"
 #include <sys/stat.h>
+#elif _WIN32
+#include <Windows.h>
 #endif
-#include <sharedutils/util_string.h>
-#include <cstring>
+
+module pragma.filesystem;
+
+#ifdef __linux__
+import :case_open;
+#endif
+import :file_system;
 
 std::optional<std::wstring> string_to_wstring(const std::string &str);
 
@@ -49,7 +58,7 @@ void VDirectory::Remove(VData *file)
 VFilePtrInternal::VFilePtrInternal() : m_bRead(false), m_bBinary(false) {}
 VFilePtrInternal::~VFilePtrInternal() {}
 bool VFilePtrInternal::ShouldRemoveComments() { return (m_bRead == true && m_bBinary == false) ? true : false; }
-unsigned char VFilePtrInternal::GetType() { return m_type; }
+EVFile VFilePtrInternal::GetType() const { return m_type; }
 size_t VFilePtrInternal::Read(void *, size_t) { return 0; }
 size_t VFilePtrInternal::Read(void *ptr, size_t size, size_t nmemb) { return Read(ptr, size * nmemb); }
 unsigned long long VFilePtrInternal::Tell() { return 0; }
@@ -67,17 +76,18 @@ void VFilePtrInternal::Seek(unsigned long long offset, int whence)
 int VFilePtrInternal::Eof() { return 0; }
 int VFilePtrInternal::ReadChar() { return 0; }
 unsigned long long VFilePtrInternal::GetSize() { return 0; }
-unsigned int VFilePtrInternal::GetFlags()
+
+fsys::FVFile VFilePtrInternal::GetFlags() const
 {
-	unsigned int flags = 0;
+	fsys::FVFile flags = fsys::FVFile::None;
 	switch(m_type) {
-	case VFILE_VIRTUAL:
-		flags |= (FVFILE_READONLY | FVFILE_VIRTUAL);
+	case EVFile::Virtual:
+		flags |= (fsys::FVFile::ReadOnly | fsys::FVFile::Virtual);
 		break;
-	case VFILE_LOCAL:
+	case EVFile::Local:
 		break;
-	case VFILE_PACKAGE:
-		flags |= (FVFILE_READONLY | FVFILE_PACKAGE);
+	case EVFile::Package:
+		flags |= (fsys::FVFile::ReadOnly | fsys::FVFile::Package);
 		break;
 	}
 	return flags;
@@ -159,22 +169,22 @@ std::string VFilePtrInternal::ReadLine()
 char *VFilePtrInternal::ReadString(char *str, int num)
 {
 	if(Eof())
-		return NULL;
+		return nullptr;
 	int i = 0;
 	for(i = 0; i < num; i++) {
 		char c = Read<char>();
 		if(Eof())
-			return NULL;
+			return nullptr;
 		str[i] = c;
 		if(str[i] == '\n') {
 			if(i + 1 < num)
 				str[i + 1] = '\0';
 			else
-				return NULL;
+				return nullptr;
 			return str;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 unsigned long long VFilePtrInternal::FindFirstOf(const char *s)
 {
@@ -322,7 +332,7 @@ void VFilePtrInternal::IgnoreComments(std::string start, std::string end)
 VFilePtrInternalVirtual::VFilePtrInternalVirtual(VFile *file) : VFilePtrInternal()
 {
 	m_offset = 0;
-	m_type = VFILE_VIRTUAL;
+	m_type = EVFile::Virtual;
 	m_file = file;
 }
 VFilePtrInternalVirtual::~VFilePtrInternalVirtual() {}
@@ -334,14 +344,14 @@ std::shared_ptr<std::vector<uint8_t>> VFilePtrInternalVirtual::GetData() const {
 VFilePtrInternalReal::VFilePtrInternalReal() : VFilePtrInternal()
 {
 	VFilePtrInternal();
-	m_type = VFILE_LOCAL;
-	m_file = NULL;
+	m_type = EVFile::Local;
+	m_file = nullptr;
 	m_size = 0;
 	m_path = "";
 }
 VFilePtrInternalReal::~VFilePtrInternalReal()
 {
-	if(m_file != NULL)
+	if(m_file != nullptr)
 		fclose(m_file);
 }
 const std::string &VFilePtrInternalReal::GetPath() const { return m_path; }
@@ -380,14 +390,15 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *op
 	_wfopen_s(&m_file, wpath->data(), wmode.data());
 #else
 	auto *cpath = sPath.c_str();
-	char *r = static_cast<char *>(alloca(strlen(cpath) + 3));
-	if(casepath(path, r)) {
+	std::string r;
+	r.resize(sPath.length() + 3); // same size as before (strlen(cpath) + 3)
+	if(casepath(path, r.data())) {
 		sPath = r;
-		m_file = fopen(r, mode);
+		m_file = fopen(r.c_str(), mode);
 	}
 #endif
 
-	if(m_file == NULL) {
+	if(m_file == nullptr) {
 #ifdef _WIN32
 		DWORD lastErr = GetLastError();
 		if(optOutErrno)
@@ -440,7 +451,7 @@ bool VFilePtrInternalReal::ReOpen(const char *mode)
 #endif
 	m_bBinary = FileManager::IsBinaryMode(mode);
 	m_bRead = !FileManager::IsWriteMode(mode);
-	if(m_file == NULL)
+	if(m_file == nullptr)
 		return false;
 	return true;
 }

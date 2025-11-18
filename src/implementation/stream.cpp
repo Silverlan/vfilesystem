@@ -1,8 +1,11 @@
 // SPDX-FileCopyrightText: (c) 2019 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "fsys/filesystem_stream.hpp"
-#include <cstring>
+module;
+
+module pragma.filesystem;
+
+import :stream;
 
 fsys::StreamBuf::StreamBuf(std::size_t buff_sz, std::size_t put_back) : BaseStreamBuf(), put_back(std::max(put_back, size_t(1))), buffer(std::max(buff_sz, put_back) + put_back)
 {

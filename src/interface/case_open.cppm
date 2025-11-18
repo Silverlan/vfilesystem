@@ -20,24 +20,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef fcaseopen_h
-#define fcaseopen_h
+module;
 
 // Source: https://github.com/OneSadCookie/fcaseopen
-#include <stdio.h>
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
+export module pragma.filesystem:case_open;
 
-extern FILE *fcaseopen(char const *path, char const *mode);
-extern FILE *fcasereopen(FILE **f, char const *path, char const *mode);
-extern int casepath(char const *path, char *r);
+export import std.compat;
 
-extern void casechdir(char const *path);
+export {
+	FILE *fcaseopen(char const *path, char const *mode);
+	FILE *fcasereopen(FILE **f, char const *path, char const *mode);
+	int casepath(char const *path, char *r);
 
-#if defined(__cplusplus)
+	void casechdir(char const *path);
 }
-#endif
-
-#endif

@@ -1,12 +1,11 @@
 // SPDX-FileCopyrightText: (c) 2021 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "fsys/file_index_cache.hpp"
-#include <sharedutils/util.h>
-#include <sharedutils/magic_enum.hpp>
-#include <sharedutils/util_string.h>
-#include <sharedutils/util_path.hpp>
-#include <stdexcept>
+module;
+
+module pragma.filesystem;
+
+import :file_index_cache;
 
 static bool path_to_string(const std::filesystem::path &path, std::string &str)
 {
