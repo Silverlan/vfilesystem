@@ -3,6 +3,8 @@
 
 module;
 
+#include "util_enum_flags.hpp"
+
 export module pragma.filesystem:search_flags;
 
 import pragma.math;
@@ -12,8 +14,5 @@ export {
 		enum class SearchFlags : uint32_t { None = 0, Virtual = 1, Package = 2, Local = 4, NoMounts = 8, LocalRoot = NoMounts | Local, All = static_cast<uint32_t>(-1) & ~NoMounts };
 		using namespace umath::scoped_enum::bitwise;
 	};
-	namespace umath::scoped_enum::bitwise {
-		template<>
-		struct enable_bitwise_operators<fsys::SearchFlags> : std::true_type {};
-	}
+	REGISTER_ENUM_FLAGS(fsys::SearchFlags)
 }

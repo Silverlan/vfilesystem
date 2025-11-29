@@ -4,6 +4,7 @@
 module;
 
 #include "definitions.hpp"
+#include "util_enum_flags.hpp"
 
 export module pragma.filesystem:directory_watcher;
 
@@ -46,10 +47,7 @@ export {
 		std::unique_ptr<DirectoryWatchListenerSet> m_watchListenerSet;
 		filemanager::DirectoryWatcherManager &m_watcherManager;
 	};
-	namespace umath::scoped_enum::bitwise {
-		template<>
-		struct enable_bitwise_operators<DirectoryWatcher::WatchFlags> : std::true_type {};
-	}
+	REGISTER_ENUM_FLAGS(DirectoryWatcher::WatchFlags)
 
 	class DLLFSYSTEM DirectoryWatcherCallback : public DirectoryWatcher {
 	  protected:

@@ -4,6 +4,7 @@
 module;
 
 #include "definitions.hpp"
+#include "util_enum_flags.hpp"
 
 export module pragma.filesystem:file_system;
 
@@ -239,10 +240,7 @@ export {
 			return {};
 		}
 	};
-	namespace umath::scoped_enum::bitwise {
-		template<>
-		struct enable_bitwise_operators<filemanager::FileMode> : std::true_type {};
-	}
+	REGISTER_ENUM_FLAGS(filemanager::FileMode)
 
 	class DLLFSYSTEM FileManager {
 	  private:
