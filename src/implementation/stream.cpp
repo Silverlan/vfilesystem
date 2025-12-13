@@ -7,13 +7,13 @@ module pragma.filesystem;
 
 import :stream;
 
-fsys::StreamBuf::StreamBuf(std::size_t buff_sz, std::size_t put_back) : BaseStreamBuf(), put_back(std::max(put_back, size_t(1))), buffer(std::max(buff_sz, put_back) + put_back)
+pragma::filesystem::StreamBuf::StreamBuf(std::size_t buff_sz, std::size_t put_back) : BaseStreamBuf(), put_back(std::max(put_back, size_t(1))), buffer(std::max(buff_sz, put_back) + put_back)
 {
 	auto *end = &buffer.front() + buffer.size();
 	setg(end, end, end);
 }
 
-std::streambuf::int_type fsys::StreamBuf::underflow()
+std::streambuf::int_type pragma::filesystem::StreamBuf::underflow()
 {
 	if(gptr() < egptr()) // buffer not exhausted
 		return traits_type::to_int_type(*gptr());
@@ -39,7 +39,7 @@ std::streambuf::int_type fsys::StreamBuf::underflow()
 	return traits_type::to_int_type(*gptr());
 }
 
-bool fsys::BaseStreamBuf::open(const std::string &fileName)
+bool pragma::filesystem::BaseStreamBuf::open(const std::string &fileName)
 {
 	mFile = FileManager::OpenFile(fileName.c_str(), "rb");
 	if(mFile == nullptr)
@@ -47,17 +47,17 @@ bool fsys::BaseStreamBuf::open(const std::string &fileName)
 	return true;
 }
 
-bool fsys::BaseStreamBuf::isvalid() const { return (mFile != nullptr); }
+bool pragma::filesystem::BaseStreamBuf::isvalid() const { return (mFile != nullptr); }
 
 ///////////////////
 
 // Inherit from std::istream to use our custom streambuf
-fsys::Stream::Stream(const char *filename, BaseStreamBuf *buf) : std::istream(buf)
+pragma::filesystem::Stream::Stream(const char *filename, BaseStreamBuf *buf) : std::istream(buf)
 {
 	// Set the failbit if the file failed to open.
 	if(!(static_cast<BaseStreamBuf *>(rdbuf())->open(filename)))
 		clear(failbit);
 }
-fsys::Stream::Stream(const char *filename) : Stream(filename, new StreamBuf()) {}
-fsys::Stream::~Stream() { delete rdbuf(); }
-bool fsys::Stream::isvalid() const { return static_cast<BaseStreamBuf *>(rdbuf())->isvalid(); }
+pragma::filesystem::Stream::Stream(const char *filename) : Stream(filename, new StreamBuf()) {}
+pragma::filesystem::Stream::~Stream() { delete rdbuf(); }
+bool pragma::filesystem::Stream::isvalid() const { return static_cast<BaseStreamBuf *>(rdbuf())->isvalid(); }

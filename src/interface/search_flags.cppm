@@ -10,9 +10,9 @@ export module pragma.filesystem:search_flags;
 import pragma.math;
 
 export {
-	namespace fsys {
+	namespace pragma::filesystem {
 		enum class SearchFlags : uint32_t { None = 0, Virtual = 1, Package = 2, Local = 4, NoMounts = 8, LocalRoot = NoMounts | Local, All = static_cast<uint32_t>(-1) & ~NoMounts };
-		using namespace umath::scoped_enum::bitwise;
+		using namespace pragma::math::scoped_enum::bitwise;
 	};
-	REGISTER_ENUM_FLAGS(fsys::SearchFlags)
+	REGISTER_ENUM_FLAGS(pragma::filesystem::SearchFlags)
 }

@@ -10,7 +10,7 @@ export module pragma.filesystem:file_index_cache;
 export import pragma.util;
 
 export {
-	namespace fsys {
+	namespace pragma::filesystem {
 		class DLLFSYSTEM FileIndexCache {
 		  public:
 			enum class Type : uint8_t {

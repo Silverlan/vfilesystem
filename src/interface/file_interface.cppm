@@ -12,10 +12,10 @@ export import pragma.util;
 export import :file_handle;
 
 export {
-	namespace fsys {
+	namespace pragma::filesystem {
 		struct DLLFSYSTEM File : public ufile::IFile {
 			File() = default;
-			File(const ::VFilePtr &f);
+			File(const VFilePtr &f);
 			virtual ~File() override = default;
 			virtual size_t Read(void *data, size_t size) override;
 			virtual size_t Write(const void *data, size_t size) override;
@@ -25,9 +25,9 @@ export {
 			virtual size_t GetSize() override;
 			virtual bool Eof() override;
 			virtual std::optional<std::string> GetFileName() const override;
-			::VFilePtr &GetFile() { return m_file; }
+			VFilePtr &GetFile() { return m_file; }
 		  private:
-			::VFilePtr m_file;
+			VFilePtr m_file;
 		};
 	};
 }

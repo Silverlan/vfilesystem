@@ -20,31 +20,31 @@ import :file_system;
 
 std::optional<std::wstring> string_to_wstring(const std::string &str);
 
-VData::VData(std::string name) { m_name = name; }
-bool VData::IsFile() { return false; }
-bool VData::IsDirectory() { return false; }
-std::string VData::GetName() { return m_name; }
+pragma::filesystem::VData::VData(std::string name) { m_name = name; }
+bool pragma::filesystem::VData::IsFile() { return false; }
+bool pragma::filesystem::VData::IsDirectory() { return false; }
+std::string pragma::filesystem::VData::GetName() { return m_name; }
 
 ///////////////////////////
 
-VFile::VFile(const std::string &name, const std::shared_ptr<std::vector<uint8_t>> &data) : VData(name), m_data(data) {}
-bool VFile::IsFile() { return true; }
-unsigned long long VFile::GetSize() { return m_data->size(); }
-std::shared_ptr<std::vector<uint8_t>> VFile::GetData() const { return m_data; }
+pragma::filesystem::VFile::VFile(const std::string &name, const std::shared_ptr<std::vector<uint8_t>> &data) : VData(name), m_data(data) {}
+bool pragma::filesystem::VFile::IsFile() { return true; }
+unsigned long long pragma::filesystem::VFile::GetSize() { return m_data->size(); }
+std::shared_ptr<std::vector<uint8_t>> pragma::filesystem::VFile::GetData() const { return m_data; }
 
 ///////////////////////////
 
-VDirectory::VDirectory(std::string name) : VData(name) {}
-VDirectory::VDirectory() : VData("root") {}
-VDirectory::~VDirectory()
+pragma::filesystem::VDirectory::VDirectory(std::string name) : VData(name) {}
+pragma::filesystem::VDirectory::VDirectory() : VData("root") {}
+pragma::filesystem::VDirectory::~VDirectory()
 {
 	for(unsigned int i = 0; i < m_files.size(); i++)
 		delete m_files[i];
 }
-std::vector<VData *> &VDirectory::GetFiles() { return m_files; }
-bool VDirectory::IsDirectory() { return true; }
-void VDirectory::Add(VData *file) { m_files.push_back(file); }
-void VDirectory::Remove(VData *file)
+std::vector<pragma::filesystem::VData *> &pragma::filesystem::VDirectory::GetFiles() { return m_files; }
+bool pragma::filesystem::VDirectory::IsDirectory() { return true; }
+void pragma::filesystem::VDirectory::Add(VData *file) { m_files.push_back(file); }
+void pragma::filesystem::VDirectory::Remove(VData *file)
 {
 	auto it = std::find(m_files.begin(), m_files.end(), file);
 	if(it == m_files.end())
@@ -55,15 +55,15 @@ void VDirectory::Remove(VData *file)
 
 ///////////////////////////
 
-VFilePtrInternal::VFilePtrInternal() : m_bRead(false), m_bBinary(false) {}
-VFilePtrInternal::~VFilePtrInternal() {}
-bool VFilePtrInternal::ShouldRemoveComments() { return (m_bRead == true && m_bBinary == false) ? true : false; }
-EVFile VFilePtrInternal::GetType() const { return m_type; }
-size_t VFilePtrInternal::Read(void *, size_t) { return 0; }
-size_t VFilePtrInternal::Read(void *ptr, size_t size, size_t nmemb) { return Read(ptr, size * nmemb); }
-unsigned long long VFilePtrInternal::Tell() { return 0; }
-void VFilePtrInternal::Seek(unsigned long long) {}
-void VFilePtrInternal::Seek(unsigned long long offset, int whence)
+pragma::filesystem::VFilePtrInternal::VFilePtrInternal() : m_bRead(false), m_bBinary(false) {}
+pragma::filesystem::VFilePtrInternal::~VFilePtrInternal() {}
+bool pragma::filesystem::VFilePtrInternal::ShouldRemoveComments() { return (m_bRead == true && m_bBinary == false) ? true : false; }
+EVFile pragma::filesystem::VFilePtrInternal::GetType() const { return m_type; }
+size_t pragma::filesystem::VFilePtrInternal::Read(void *, size_t) { return 0; }
+size_t pragma::filesystem::VFilePtrInternal::Read(void *ptr, size_t size, size_t nmemb) { return Read(ptr, size * nmemb); }
+unsigned long long pragma::filesystem::VFilePtrInternal::Tell() { return 0; }
+void pragma::filesystem::VFilePtrInternal::Seek(unsigned long long) {}
+void pragma::filesystem::VFilePtrInternal::Seek(unsigned long long offset, int whence)
 {
 	switch(whence) {
 	case SEEK_CUR:
@@ -73,26 +73,26 @@ void VFilePtrInternal::Seek(unsigned long long offset, int whence)
 	}
 	return Seek(offset);
 }
-int VFilePtrInternal::Eof() { return 0; }
-int VFilePtrInternal::ReadChar() { return 0; }
-unsigned long long VFilePtrInternal::GetSize() { return 0; }
+int pragma::filesystem::VFilePtrInternal::Eof() { return 0; }
+int pragma::filesystem::VFilePtrInternal::ReadChar() { return 0; }
+unsigned long long pragma::filesystem::VFilePtrInternal::GetSize() { return 0; }
 
-fsys::FVFile VFilePtrInternal::GetFlags() const
+pragma::filesystem::FVFile pragma::filesystem::VFilePtrInternal::GetFlags() const
 {
-	fsys::FVFile flags = fsys::FVFile::None;
+	FVFile flags = FVFile::None;
 	switch(m_type) {
 	case EVFile::Virtual:
-		flags |= (fsys::FVFile::ReadOnly | fsys::FVFile::Virtual);
+		flags |= (FVFile::ReadOnly | FVFile::Virtual);
 		break;
 	case EVFile::Local:
 		break;
 	case EVFile::Package:
-		flags |= (fsys::FVFile::ReadOnly | fsys::FVFile::Package);
+		flags |= (FVFile::ReadOnly | FVFile::Package);
 		break;
 	}
 	return flags;
 }
-bool VFilePtrInternal::RemoveComments(unsigned char &c, bool bRemoveComments)
+bool pragma::filesystem::VFilePtrInternal::RemoveComments(unsigned char &c, bool bRemoveComments)
 {
 	if(bRemoveComments == true) {
 		unsigned long long p = Tell();
@@ -134,7 +134,7 @@ bool VFilePtrInternal::RemoveComments(unsigned char &c, bool bRemoveComments)
 	}
 	return false;
 }
-std::string VFilePtrInternal::ReadString()
+std::string pragma::filesystem::VFilePtrInternal::ReadString()
 {
 	unsigned char c;
 	std::string name = "";
@@ -148,7 +148,7 @@ std::string VFilePtrInternal::ReadString()
 	}
 	return name;
 }
-std::string VFilePtrInternal::ReadLine()
+std::string pragma::filesystem::VFilePtrInternal::ReadLine()
 {
 	unsigned char c;
 	std::string name = "";
@@ -166,7 +166,7 @@ std::string VFilePtrInternal::ReadLine()
 	}
 	return name;
 }
-char *VFilePtrInternal::ReadString(char *str, int num)
+char *pragma::filesystem::VFilePtrInternal::ReadString(char *str, int num)
 {
 	if(Eof())
 		return nullptr;
@@ -186,7 +186,7 @@ char *VFilePtrInternal::ReadString(char *str, int num)
 	}
 	return nullptr;
 }
-unsigned long long VFilePtrInternal::FindFirstOf(const char *s)
+unsigned long long pragma::filesystem::VFilePtrInternal::FindFirstOf(const char *s)
 {
 	if(Eof())
 		return static_cast<unsigned long long>(EOF);
@@ -205,7 +205,7 @@ unsigned long long VFilePtrInternal::FindFirstOf(const char *s)
 	} while(!Eof());
 	return static_cast<unsigned long long>(EOF);
 }
-unsigned long long VFilePtrInternal::FindFirstNotOf(const char *s)
+unsigned long long pragma::filesystem::VFilePtrInternal::FindFirstNotOf(const char *s)
 {
 	if(Eof())
 		return static_cast<unsigned long long>(EOF);
@@ -230,7 +230,7 @@ unsigned long long VFilePtrInternal::FindFirstNotOf(const char *s)
 	} while(!Eof());
 	return static_cast<unsigned long long>(EOF);
 }
-std::string VFilePtrInternal::ReadUntil(const char *s)
+std::string pragma::filesystem::VFilePtrInternal::ReadUntil(const char *s)
 {
 	std::string ret = "";
 	if(Eof())
@@ -255,26 +255,26 @@ std::string VFilePtrInternal::ReadUntil(const char *s)
 	return ret;
 }
 
-unsigned long long VFilePtrInternal::FindFirstOf(char c)
+unsigned long long pragma::filesystem::VFilePtrInternal::FindFirstOf(char c)
 {
 	char s[2] = {c, '\0'};
 	return FindFirstOf(s);
 }
-unsigned long long VFilePtrInternal::FindFirstNotOf(char c)
+unsigned long long pragma::filesystem::VFilePtrInternal::FindFirstNotOf(char c)
 {
 	char s[2] = {c, '\0'};
 	return FindFirstNotOf(s);
 }
-std::string VFilePtrInternal::ReadUntil(char c)
+std::string pragma::filesystem::VFilePtrInternal::ReadUntil(char c)
 {
 	char s[2] = {c, '\0'};
 	return ReadUntil(s);
 }
-unsigned long long VFilePtrInternal::FindFirstOf(std::string s) { return FindFirstOf(s.c_str()); }
-unsigned long long VFilePtrInternal::FindFirstNotOf(std::string s) { return FindFirstNotOf(s.c_str()); }
-std::string VFilePtrInternal::ReadUntil(std::string s) { return ReadUntil(s.c_str()); }
+unsigned long long pragma::filesystem::VFilePtrInternal::FindFirstOf(std::string s) { return FindFirstOf(s.c_str()); }
+unsigned long long pragma::filesystem::VFilePtrInternal::FindFirstNotOf(std::string s) { return FindFirstNotOf(s.c_str()); }
+std::string pragma::filesystem::VFilePtrInternal::ReadUntil(std::string s) { return ReadUntil(s.c_str()); }
 
-unsigned long long VFilePtrInternal::Find(const char *s, bool bIgnoreCase)
+unsigned long long pragma::filesystem::VFilePtrInternal::Find(const char *s, bool bIgnoreCase)
 {
 	if(Eof() || s[0] == '\0')
 		return static_cast<unsigned long long>(EOF);
@@ -318,7 +318,7 @@ unsigned long long VFilePtrInternal::Find(const char *s, bool bIgnoreCase)
 		delete[] cpy;
 	return static_cast<unsigned long long>(EOF);
 }
-void VFilePtrInternal::IgnoreComments(std::string start, std::string end)
+void pragma::filesystem::VFilePtrInternal::IgnoreComments(std::string start, std::string end)
 {
 	if(start.empty())
 		return;
@@ -329,19 +329,19 @@ void VFilePtrInternal::IgnoreComments(std::string start, std::string end)
 
 ///////////////////////////
 
-VFilePtrInternalVirtual::VFilePtrInternalVirtual(VFile *file) : VFilePtrInternal()
+pragma::filesystem::VFilePtrInternalVirtual::VFilePtrInternalVirtual(VFile *file) : VFilePtrInternal()
 {
 	m_offset = 0;
 	m_type = EVFile::Virtual;
 	m_file = file;
 }
-VFilePtrInternalVirtual::~VFilePtrInternalVirtual() {}
-unsigned long long VFilePtrInternalVirtual::GetSize() { return m_file->GetSize(); }
-std::shared_ptr<std::vector<uint8_t>> VFilePtrInternalVirtual::GetData() const { return m_file->GetData(); }
+pragma::filesystem::VFilePtrInternalVirtual::~VFilePtrInternalVirtual() {}
+unsigned long long pragma::filesystem::VFilePtrInternalVirtual::GetSize() { return m_file->GetSize(); }
+std::shared_ptr<std::vector<uint8_t>> pragma::filesystem::VFilePtrInternalVirtual::GetData() const { return m_file->GetData(); }
 
 ///////////////////////////
 
-VFilePtrInternalReal::VFilePtrInternalReal() : VFilePtrInternal()
+pragma::filesystem::VFilePtrInternalReal::VFilePtrInternalReal() : VFilePtrInternal()
 {
 	VFilePtrInternal();
 	m_type = EVFile::Local;
@@ -349,12 +349,12 @@ VFilePtrInternalReal::VFilePtrInternalReal() : VFilePtrInternal()
 	m_size = 0;
 	m_path = "";
 }
-VFilePtrInternalReal::~VFilePtrInternalReal()
+pragma::filesystem::VFilePtrInternalReal::~VFilePtrInternalReal()
 {
 	if(m_file != nullptr)
 		fclose(m_file);
 }
-const std::string &VFilePtrInternalReal::GetPath() const { return m_path; }
+const std::string &pragma::filesystem::VFilePtrInternalReal::GetPath() const { return m_path; }
 
 #ifdef __linux__
 static bool is_directory(FILE *f)
@@ -371,7 +371,7 @@ static bool is_directory(FILE *f)
 }
 #endif
 
-bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *optOutErrno, std::string *optOutErr)
+bool pragma::filesystem::VFilePtrInternalReal::Construct(const char *path, const char *mode, int *optOutErrno, std::string *optOutErr)
 {
 	std::string sPath = path;
 	std::replace(sPath.begin(), sPath.end(), '\\', '/');
@@ -385,7 +385,7 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *op
 			*optOutErr = "failed to convert UTF‑8 path to UTF‑16";
 		return false;
 	}
-	auto wmode = ustring::string_to_wstring(mode);
+	auto wmode = pragma::string::string_to_wstring(mode);
 	m_file = nullptr;
 	_wfopen_s(&m_file, wpath->data(), wmode.data());
 #else
@@ -437,14 +437,14 @@ bool VFilePtrInternalReal::Construct(const char *path, const char *mode, int *op
 	return true;
 }
 
-unsigned long long VFilePtrInternalReal::GetSize() { return m_size; }
-bool VFilePtrInternalReal::ReOpen(const char *mode)
+unsigned long long pragma::filesystem::VFilePtrInternalReal::GetSize() { return m_size; }
+bool pragma::filesystem::VFilePtrInternalReal::ReOpen(const char *mode)
 {
 #ifdef _WIN32
 	auto wpath = string_to_wstring(m_path);
 	if(!wpath)
 		return false;
-	auto wmode = ustring::string_to_wstring(mode);
+	auto wmode = pragma::string::string_to_wstring(mode);
 	_wfreopen_s(&m_file, wpath->data(), wmode.data(), m_file);
 #else
 	m_file = freopen(m_path.c_str(), mode, m_file);

@@ -11,23 +11,23 @@ import :file_system;
 
 struct RootPathInfo {
 	std::string identifier;
-	util::Path path;
+	pragma::util::Path path;
 	int32_t priority = -1;
 };
 static std::vector<RootPathInfo> g_absoluteRootPaths {};
-static std::vector<util::Path> g_orderedAbsoluteRootPaths {};
+static std::vector<pragma::util::Path> g_orderedAbsoluteRootPaths {};
 
 static std::string resolve_home_dir(const std::string_view &sv, bool filePath)
 {
 #ifdef __linux__
 	if(sv.empty() || sv.front() != '~')
 		return std::string {sv};
-	auto strHome = util::get_env_variable("HOME");
+	auto strHome = pragma::util::get_env_variable("HOME");
 	if(!strHome)
 		return std::string {sv};
 	if(filePath)
-		return util::FilePath(*strHome, sv.substr(1)).GetString();
-	return util::DirPath(*strHome, sv.substr(1)).GetString();
+		return pragma::util::FilePath(*strHome, sv.substr(1)).GetString();
+	return pragma::util::DirPath(*strHome, sv.substr(1)).GetString();
 #else
 	return std::string {sv};
 #endif
@@ -47,14 +47,14 @@ static void update_ordered_absolute_root_paths()
 		g_orderedAbsoluteRootPaths.push_back(g_absoluteRootPaths[idx].path);
 }
 
-std::string filemanager::get_program_path() { return util::get_program_path(); }
-std::string filemanager::get_program_write_path()
+std::string pragma::filesystem::get_program_path() { return util::get_program_path(); }
+std::string pragma::filesystem::get_program_write_path()
 {
 	if(!g_absoluteRootPaths.empty())
 		return g_absoluteRootPaths.front().path.GetString();
 	return get_program_path();
 }
-void filemanager::set_absolute_root_path(const std::string_view &path, int32_t mountPriority)
+void pragma::filesystem::set_absolute_root_path(const std::string_view &path, int32_t mountPriority)
 {
 	auto dirPath = util::DirPath(resolve_home_dir(path, false));
 	try {
@@ -69,7 +69,7 @@ void filemanager::set_absolute_root_path(const std::string_view &path, int32_t m
 	update_ordered_absolute_root_paths();
 	return FileManager::SetAbsoluteRootPath(dirPath.GetString());
 }
-void filemanager::add_secondary_absolute_read_only_root_path(const std::string &identifier, const std::string_view &path, int32_t mountPriority)
+void pragma::filesystem::add_secondary_absolute_read_only_root_path(const std::string &identifier, const std::string_view &path, int32_t mountPriority)
 {
 	auto dirPath = util::DirPath(resolve_home_dir(path, false));
 	try {
@@ -85,9 +85,9 @@ void filemanager::add_secondary_absolute_read_only_root_path(const std::string &
 		return;
 	cacheManager->AddRootReadOnlyLocation(identifier, dirPath.GetString());
 }
-const util::Path &filemanager::get_absolute_primary_root_path()
+const pragma::util::Path &pragma::filesystem::get_absolute_primary_root_path()
 {
 	assert(!g_absoluteRootPaths.empty());
 	return g_absoluteRootPaths.front().path;
 }
-const std::vector<util::Path> &filemanager::get_absolute_root_paths() { return g_orderedAbsoluteRootPaths; }
+const std::vector<pragma::util::Path> &pragma::filesystem::get_absolute_root_paths() { return g_orderedAbsoluteRootPaths; }

@@ -7,22 +7,22 @@ module pragma.filesystem;
 
 import :mount;
 
-MountDirectory::MountDirectory(const std::string &dir, bool _absolutePath, fsys::SearchFlags search) : directory(dir), searchMode(search), absolutePath(_absolutePath) {}
+pragma::filesystem::MountDirectory::MountDirectory(const std::string &dir, bool _absolutePath, SearchFlags search) : directory(dir), searchMode(search), absolutePath(_absolutePath) {}
 
 ////////////////////////////////
 
-MountIterator::MountIterator(std::vector<MountDirectory> &directories) : m_directories(&directories), m_index(0) {}
+pragma::filesystem::MountIterator::MountIterator(std::vector<MountDirectory> &directories) : m_directories(&directories), m_index(0) {}
 
-void MountIterator::operator++() { m_index++; }
+void pragma::filesystem::MountIterator::operator++() { m_index++; }
 
-bool MountIterator::IsValid() { return (m_index > m_directories->size()) ? false : true; }
+bool pragma::filesystem::MountIterator::IsValid() { return (m_index > m_directories->size()) ? false : true; }
 
-bool MountIterator::GetNextDirectory(std::string &outDir, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags, bool &bAbsolute)
+bool pragma::filesystem::MountIterator::GetNextDirectory(std::string &outDir, SearchFlags includeFlags, SearchFlags excludeFlags, bool &bAbsolute)
 {
 	bAbsolute = false;
 	if(!IsValid())
 		return false;
-	if((includeFlags & fsys::SearchFlags::NoMounts) != fsys::SearchFlags::None)
+	if((includeFlags & SearchFlags::NoMounts) != SearchFlags::None)
 		m_index = m_directories->size();
 	if(m_index == m_directories->size()) {
 		m_index++;
@@ -31,7 +31,7 @@ bool MountIterator::GetNextDirectory(std::string &outDir, fsys::SearchFlags incl
 		return true;
 	}
 	MountDirectory &dir = (*m_directories)[m_index];
-	if((includeFlags & dir.searchMode) == fsys::SearchFlags::None || (excludeFlags & dir.searchMode) != fsys::SearchFlags::None) {
+	if((includeFlags & dir.searchMode) == SearchFlags::None || (excludeFlags & dir.searchMode) != SearchFlags::None) {
 		m_index++;
 		return GetNextDirectory(outDir, includeFlags, excludeFlags, bAbsolute);
 	}

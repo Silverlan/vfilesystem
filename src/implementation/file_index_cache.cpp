@@ -12,7 +12,7 @@ static bool path_to_string(const std::filesystem::path &path, std::string &str)
 	try {
 #ifdef _WIN32
 
-		str = ustring::wstring_to_string(path.wstring());
+		str = pragma::string::wstring_to_string(path.wstring());
 #else
 		str = path.string();
 #endif
@@ -24,7 +24,7 @@ static bool path_to_string(const std::filesystem::path &path, std::string &str)
 	}
 	return false;
 }
-size_t fsys::FileIndexCache::Hash(const std::string_view &key, bool isAbsolutePath) const
+size_t pragma::filesystem::FileIndexCache::Hash(const std::string_view &key, bool isAbsolutePath) const
 {
 	// djb2 hash
 	size_t hash = 5381;
@@ -46,16 +46,16 @@ size_t fsys::FileIndexCache::Hash(const std::string_view &key, bool isAbsolutePa
 	return hash;
 }
 
-fsys::FileIndexCache::FileIndexCache() : m_pool {5}
+pragma::filesystem::FileIndexCache::FileIndexCache() : m_pool {5}
 {
 	auto n = m_pool.size();
 	for(auto i = decltype(n) {0u}; i < n; ++i)
 		util::set_thread_name(m_pool.get_thread(i), "fsys_index_cache");
 }
 
-fsys::FileIndexCache::~FileIndexCache() { m_pool.stop(); }
+pragma::filesystem::FileIndexCache::~FileIndexCache() { m_pool.stop(); }
 
-void fsys::FileIndexCache::NormalizePath(std::string &path) const
+void pragma::filesystem::FileIndexCache::NormalizePath(std::string &path) const
 {
 	for(auto &c : path) {
 		if(c == '\\')
@@ -69,7 +69,7 @@ void fsys::FileIndexCache::NormalizePath(std::string &path) const
 		path = path.substr(0, path.size() - 1);
 }
 
-bool fsys::FileIndexCache::Exists(std::string path) const
+bool pragma::filesystem::FileIndexCache::Exists(std::string path) const
 {
 	auto hash = Hash(path, false);
 	std::unique_lock lock {m_cacheMutex};
@@ -77,13 +77,13 @@ bool fsys::FileIndexCache::Exists(std::string path) const
 	return it != m_indexCache.end();
 }
 
-void fsys::FileIndexCache::Add(const std::string_view &path, Type type)
+void pragma::filesystem::FileIndexCache::Add(const std::string_view &path, Type type)
 {
 	auto hash = Hash(path, false);
 	std::unique_lock lock {m_cacheMutex};
 	m_indexCache[hash].type = type;
 }
-void fsys::FileIndexCache::Remove(const std::string_view &path)
+void pragma::filesystem::FileIndexCache::Remove(const std::string_view &path)
 {
 	auto hash = Hash(path, false);
 	std::unique_lock lock {m_cacheMutex};
@@ -93,15 +93,15 @@ void fsys::FileIndexCache::Remove(const std::string_view &path)
 	m_indexCache.erase(it);
 }
 
-std::optional<fsys::FileIndexCache::ItemInfo> fsys::FileIndexCache::FindItemInfo(std::string path) const
+std::optional<pragma::filesystem::FileIndexCache::ItemInfo> pragma::filesystem::FileIndexCache::FindItemInfo(std::string path) const
 {
 	auto hash = Hash(path, false);
 	std::unique_lock lock {m_cacheMutex};
 	auto it = m_indexCache.find(hash);
-	return (it != m_indexCache.end()) ? it->second : std::optional<fsys::FileIndexCache::ItemInfo> {};
+	return (it != m_indexCache.end()) ? it->second : std::optional<ItemInfo> {};
 }
 
-fsys::FileIndexCache::Type fsys::FileIndexCache::FindFileType(std::string path) const
+pragma::filesystem::FileIndexCache::Type pragma::filesystem::FileIndexCache::FindFileType(std::string path) const
 {
 	auto hash = Hash(path, false);
 	std::unique_lock lock {m_cacheMutex};
@@ -109,7 +109,7 @@ fsys::FileIndexCache::Type fsys::FileIndexCache::FindFileType(std::string path) 
 	return (it != m_indexCache.end()) ? it->second.type : Type::Invalid;
 }
 
-void fsys::FileIndexCache::Reset(std::string rootPath)
+void pragma::filesystem::FileIndexCache::Reset(std::string rootPath)
 {
 	rootPath = util::DirPath(rootPath).GetString();
 	m_pool.clear_queue();
@@ -123,15 +123,15 @@ void fsys::FileIndexCache::Reset(std::string rootPath)
 	QueuePath(m_rootPath);
 }
 
-bool fsys::FileIndexCache::IsComplete() const { return m_pending == 0; }
+bool pragma::filesystem::FileIndexCache::IsComplete() const { return m_pending == 0; }
 
-void fsys::FileIndexCache::Wait()
+void pragma::filesystem::FileIndexCache::Wait()
 {
 	auto ul = std::unique_lock<std::mutex>(m_taskCompletedMutex);
 	m_taskCompleteCondition.wait(ul, [this]() { return m_pending == 0; });
 }
 
-void fsys::FileIndexCache::QueuePath(const std::filesystem::path &path)
+void pragma::filesystem::FileIndexCache::QueuePath(const std::filesystem::path &path)
 {
 	std::filesystem::directory_entry entry {path};
 	if(entry.exists() == false)
@@ -148,7 +148,7 @@ void fsys::FileIndexCache::QueuePath(const std::filesystem::path &path)
 	});
 }
 
-void fsys::FileIndexCache::QueuePath(size_t rootLen, const std::filesystem::directory_entry &path)
+void pragma::filesystem::FileIndexCache::QueuePath(size_t rootLen, const std::filesystem::directory_entry &path)
 {
 	++m_pending;
 
@@ -158,13 +158,13 @@ void fsys::FileIndexCache::QueuePath(size_t rootLen, const std::filesystem::dire
 	});
 }
 
-void fsys::FileIndexCache::DecrementPending()
+void pragma::filesystem::FileIndexCache::DecrementPending()
 {
 	if(--m_pending == 0)
 		m_taskCompleteCondition.notify_all();
 }
 
-void fsys::FileIndexCache::IterateFiles(size_t rootLen, const std::filesystem::directory_entry &path)
+void pragma::filesystem::FileIndexCache::IterateFiles(size_t rootLen, const std::filesystem::directory_entry &path)
 {
 	std::vector<std::pair<size_t, ItemInfo>> localCache;
 	auto addItem = [this, &localCache, rootLen](const std::filesystem::path &path, ItemInfo info) {
@@ -200,18 +200,18 @@ void fsys::FileIndexCache::IterateFiles(size_t rootLen, const std::filesystem::d
 
 /////////////////////
 
-fsys::RootPathFileCacheManager::RootPathFileCacheManager()
+pragma::filesystem::RootPathFileCacheManager::RootPathFileCacheManager()
 {
 	auto cache = std::make_unique<FileIndexCache>();
 	m_primaryCache = cache.get();
 	m_caches["primary"] = std::move(cache);
 }
 
-void fsys::RootPathFileCacheManager::SetPrimaryRootLocation(const std::string &rootPath) { m_primaryCache->Reset(rootPath); }
+void pragma::filesystem::RootPathFileCacheManager::SetPrimaryRootLocation(const std::string &rootPath) { m_primaryCache->Reset(rootPath); }
 
-fsys::FileIndexCache &fsys::RootPathFileCacheManager::GetPrimaryCache() { return *m_primaryCache; }
+pragma::filesystem::FileIndexCache &pragma::filesystem::RootPathFileCacheManager::GetPrimaryCache() { return *m_primaryCache; }
 
-void fsys::RootPathFileCacheManager::AddRootReadOnlyLocation(const std::string &identifier, const std::string_view &rootPath)
+void pragma::filesystem::RootPathFileCacheManager::AddRootReadOnlyLocation(const std::string &identifier, const std::string_view &rootPath)
 {
 	if(identifier == "primary")
 		throw std::runtime_error {"'primary' root location is reserved"};
@@ -219,7 +219,7 @@ void fsys::RootPathFileCacheManager::AddRootReadOnlyLocation(const std::string &
 	cache->Reset(std::string {rootPath});
 	m_caches[identifier] = std::move(cache);
 }
-fsys::FileIndexCache *fsys::RootPathFileCacheManager::GetCache(const std::string &identifier)
+pragma::filesystem::FileIndexCache *pragma::filesystem::RootPathFileCacheManager::GetCache(const std::string &identifier)
 {
 	auto it = m_caches.find(identifier);
 	if(it == m_caches.end())
@@ -227,13 +227,13 @@ fsys::FileIndexCache *fsys::RootPathFileCacheManager::GetCache(const std::string
 	return it->second.get();
 }
 
-void fsys::RootPathFileCacheManager::QueuePath(const std::filesystem::path &path) { return m_primaryCache->QueuePath(path); }
-void fsys::RootPathFileCacheManager::Wait()
+void pragma::filesystem::RootPathFileCacheManager::QueuePath(const std::filesystem::path &path) { return m_primaryCache->QueuePath(path); }
+void pragma::filesystem::RootPathFileCacheManager::Wait()
 {
 	for(auto &[name, cache] : m_caches)
 		cache->Wait();
 }
-bool fsys::RootPathFileCacheManager::IsComplete() const
+bool pragma::filesystem::RootPathFileCacheManager::IsComplete() const
 {
 	auto isComplete = true;
 	for(auto &[name, cache] : m_caches) {
@@ -244,7 +244,7 @@ bool fsys::RootPathFileCacheManager::IsComplete() const
 	}
 	return isComplete;
 }
-std::optional<fsys::FileIndexCache::ItemInfo> fsys::RootPathFileCacheManager::FindItemInfo(std::string path) const
+std::optional<pragma::filesystem::FileIndexCache::ItemInfo> pragma::filesystem::RootPathFileCacheManager::FindItemInfo(std::string path) const
 {
 	for(auto &[name, cache] : m_caches) {
 		auto info = cache->FindItemInfo(path);
@@ -253,7 +253,7 @@ std::optional<fsys::FileIndexCache::ItemInfo> fsys::RootPathFileCacheManager::Fi
 	}
 	return {};
 }
-fsys::FileIndexCache::Type fsys::RootPathFileCacheManager::FindFileType(std::string path) const
+pragma::filesystem::FileIndexCache::Type pragma::filesystem::RootPathFileCacheManager::FindFileType(std::string path) const
 {
 	for(auto &[name, cache] : m_caches) {
 		auto type = cache->FindFileType(path);
@@ -262,7 +262,7 @@ fsys::FileIndexCache::Type fsys::RootPathFileCacheManager::FindFileType(std::str
 	}
 	return FileIndexCache::Type::Invalid;
 }
-bool fsys::RootPathFileCacheManager::Exists(std::string path) const
+bool pragma::filesystem::RootPathFileCacheManager::Exists(std::string path) const
 {
 	for(auto &[name, cache] : m_caches) {
 		if(cache->Exists(path))
@@ -270,5 +270,5 @@ bool fsys::RootPathFileCacheManager::Exists(std::string path) const
 	}
 	return false;
 }
-void fsys::RootPathFileCacheManager::Add(const std::string_view &path, FileIndexCache::Type type) { m_primaryCache->Add(path, type); }
-void fsys::RootPathFileCacheManager::Remove(const std::string_view &path) { m_primaryCache->Remove(path); }
+void pragma::filesystem::RootPathFileCacheManager::Add(const std::string_view &path, FileIndexCache::Type type) { m_primaryCache->Add(path, type); }
+void pragma::filesystem::RootPathFileCacheManager::Remove(const std::string_view &path) { m_primaryCache->Remove(path); }

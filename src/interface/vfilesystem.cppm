@@ -12,3 +12,7 @@ export import :file_interface;
 export import :file_system;
 export import :package;
 export import :stream;
+
+export namespace pragma::fs {
+    using namespace filesystem;
+}

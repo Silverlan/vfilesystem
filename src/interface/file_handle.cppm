@@ -7,13 +7,11 @@ export module pragma.filesystem:file_handle;
 
 export import std.compat;
 
-export {
+export namespace pragma::filesystem {
 	class VFilePtrInternal;
 	class VFilePtrInternalReal;
 	class VFilePtrInternalVirtual;
-	class VFilePtrInternalPack;
 	using VFilePtr = std::shared_ptr<VFilePtrInternal>;
 	using VFilePtrReal = std::shared_ptr<VFilePtrInternalReal>;
 	using VFilePtrVirtual = std::shared_ptr<VFilePtrInternalVirtual>;
-	using VFilePtrPack = std::shared_ptr<VFilePtrInternalPack>;
 }

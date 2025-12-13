@@ -7,11 +7,11 @@ export module pragma.filesystem:mount;
 
 export import :enums;
 
-export {
+export namespace pragma::filesystem {
 	struct MountDirectory {
-		MountDirectory(const std::string &dir, bool absolutePath, fsys::SearchFlags search);
+		MountDirectory(const std::string &dir, bool absolutePath, SearchFlags search);
 		std::string directory;
-		fsys::SearchFlags searchMode;
+		SearchFlags searchMode;
 		bool absolutePath;
 	};
 
@@ -26,6 +26,6 @@ export {
 		MountIterator(std::vector<MountDirectory> &directories);
 		void operator++();
 		bool IsValid();
-		bool GetNextDirectory(std::string &outDir, fsys::SearchFlags includeFlags, fsys::SearchFlags excludeFlags, bool &bAbsolute);
+		bool GetNextDirectory(std::string &outDir, SearchFlags includeFlags, SearchFlags excludeFlags, bool &bAbsolute);
 	};
 }

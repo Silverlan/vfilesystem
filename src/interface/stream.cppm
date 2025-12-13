@@ -10,7 +10,7 @@ export module pragma.filesystem:stream;
 export import :file_handle;
 
 export {
-	namespace fsys {
+	namespace pragma::filesystem {
 		class DLLFSYSTEM BaseStreamBuf : public std::streambuf {
 		  public:
 			virtual bool open(const std::string &fileName);

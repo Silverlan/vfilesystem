@@ -10,10 +10,8 @@ export module pragma.filesystem:directory_watcher;
 
 import pragma.math;
 
-export {
-	namespace filemanager {
-		class DirectoryWatcherManager;
-	};
+export namespace pragma::filesystem {
+	class DirectoryWatcherManager;
 	struct DirectoryWatchListenerSet;
 	class DLLFSYSTEM DirectoryWatcher {
 	  public:
@@ -30,7 +28,7 @@ export {
 			WatchDirectoryChanges = StartDisabled << 1u,
 		};
 
-		DirectoryWatcher(const std::string &path, WatchFlags flags = WatchFlags::None, filemanager::DirectoryWatcherManager *watcherManager = nullptr);
+		DirectoryWatcher(const std::string &path, WatchFlags flags = WatchFlags::None, DirectoryWatcherManager *watcherManager = nullptr);
 		virtual ~DirectoryWatcher();
 		uint32_t Poll();
 		const std::string &GetPath() const { return m_path; }
@@ -45,21 +43,22 @@ export {
 		std::string m_path;
 		WatchFlags m_watchFlags;
 		std::unique_ptr<DirectoryWatchListenerSet> m_watchListenerSet;
-		filemanager::DirectoryWatcherManager &m_watcherManager;
+		DirectoryWatcherManager &m_watcherManager;
 	};
-	REGISTER_ENUM_FLAGS(DirectoryWatcher::WatchFlags)
 
 	class DLLFSYSTEM DirectoryWatcherCallback : public DirectoryWatcher {
 	  protected:
 		std::function<void(const std::string &)> m_onFileModified;
 		virtual void OnFileModified(const std::string &fName) override;
 	  public:
-		DirectoryWatcherCallback(const std::string &path, const std::function<void(const std::string &)> &onFileModified, WatchFlags flags = WatchFlags::None, filemanager::DirectoryWatcherManager *watcherManager = nullptr);
+		DirectoryWatcherCallback(const std::string &path, const std::function<void(const std::string &)> &onFileModified, WatchFlags flags = WatchFlags::None, DirectoryWatcherManager *watcherManager = nullptr);
 	};
 	DLLFSYSTEM std::ostream &operator<<(std::ostream &out, const DirectoryWatcherCallback &o);
 
-	namespace filemanager {
-		DLLFSYSTEM void close_file_watcher();
-		DLLFSYSTEM std::shared_ptr<DirectoryWatcherManager> create_directory_watcher_manager();
-	};
+	DLLFSYSTEM void close_file_watcher();
+	DLLFSYSTEM std::shared_ptr<DirectoryWatcherManager> create_directory_watcher_manager();
+}
+
+export {
+	REGISTER_ENUM_FLAGS(pragma::filesystem::DirectoryWatcher::WatchFlags)
 }

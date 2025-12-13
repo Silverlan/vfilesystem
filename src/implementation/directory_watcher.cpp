@@ -11,7 +11,7 @@ import :file_system;
 import :directory_watcher;
 import pragma.util;
 
-namespace filemanager {
+namespace pragma::filesystem {
 	class DirectoryWatcherManager : public std::enable_shared_from_this<DirectoryWatcherManager> {
 	  public:
 		DirectoryWatcherManager();
@@ -25,7 +25,7 @@ namespace filemanager {
 
 class DirectoryWatchListener : public efsw::FileWatchListener {
   public:
-	DirectoryWatchListener(filemanager::DirectoryWatcherManager &watcherManager, const util::Path &rootPath);
+	DirectoryWatchListener(pragma::filesystem::DirectoryWatcherManager &watcherManager, const pragma::util::Path &rootPath);
 	~DirectoryWatchListener();
 	void SetWatchId(efsw::WatchID watchId);
 	void SetEnabled(bool enabled);
@@ -41,14 +41,14 @@ class DirectoryWatchListener : public efsw::FileWatchListener {
 	std::unordered_map<std::string, FileEvent> m_fileStack;
 	std::atomic<bool> m_enabled = false;
 	std::mutex m_fileMutex;
-	util::Path m_rootPath;
+	pragma::util::Path m_rootPath;
 	efsw::WatchID m_watchId;
-	std::weak_ptr<filemanager::DirectoryWatcherManager> m_watcherManager;
+	std::weak_ptr<pragma::filesystem::DirectoryWatcherManager> m_watcherManager;
 };
 
 void DirectoryWatchListener::SetEnabled(bool enabled) { m_enabled = enabled; }
 
-DirectoryWatchListener::DirectoryWatchListener(filemanager::DirectoryWatcherManager &watcherManager, const util::Path &rootPath) : m_watcherManager {watcherManager.shared_from_this()}, m_rootPath {rootPath} {}
+DirectoryWatchListener::DirectoryWatchListener(pragma::filesystem::DirectoryWatcherManager &watcherManager, const pragma::util::Path &rootPath) : m_watcherManager {watcherManager.shared_from_this()}, m_rootPath {rootPath} {}
 
 DirectoryWatchListener::~DirectoryWatchListener()
 {
@@ -75,7 +75,7 @@ void DirectoryWatchListener::handleFileAction(efsw::WatchID watchid, const std::
 		break;
 	case efsw::Actions::Modified:
 		{
-			auto path = util::FilePath(dir, filename);
+			auto path = pragma::util::FilePath(dir, filename);
 			path.MakeRelative(m_rootPath);
 			auto &normPath = path.GetString();
 			std::unique_lock lock {m_fileMutex};
@@ -114,7 +114,7 @@ uint32_t DirectoryWatchListener::Poll(const std::function<void(const std::string
 				continue;
 			}
 			++numChanged;
-			auto path = util::FilePath(item.fileName);
+			auto path = pragma::util::FilePath(item.fileName);
 			path.MakeRelative(m_rootPath);
 			onModified(path.GetString());
 
@@ -124,41 +124,43 @@ uint32_t DirectoryWatchListener::Poll(const std::function<void(const std::string
 	return numChanged;
 }
 
-struct DirectoryWatchListenerSet {
-	DirectoryWatchListenerSet() = default;
-	std::vector<std::shared_ptr<DirectoryWatchListener>> listeners;
-	uint32_t Poll(const std::function<void(const std::string &)> &onModified)
-	{
-		uint32_t count = 0;
-		for(auto &listener : listeners)
-			count += listener->Poll(onModified);
-		return count;
-	}
-};
+namespace pragma::filesystem {
+	struct DirectoryWatchListenerSet {
+		DirectoryWatchListenerSet() = default;
+		std::vector<std::shared_ptr<DirectoryWatchListener>> listeners;
+		uint32_t Poll(const std::function<void(const std::string &)> &onModified)
+		{
+			uint32_t count = 0;
+			for(auto &listener : listeners)
+				count += listener->Poll(onModified);
+			return count;
+		}
+	};
+}
 
-filemanager::DirectoryWatcherManager::DirectoryWatcherManager()
+pragma::filesystem::DirectoryWatcherManager::DirectoryWatcherManager()
 {
 	m_fileWatcher = std::make_unique<efsw::FileWatcher>();
 	m_fileWatcher->watch();
 }
 
-static std::shared_ptr<filemanager::DirectoryWatcherManager> g_DirectoryWatcherManager;
-const std::shared_ptr<filemanager::DirectoryWatcherManager> &filemanager::DirectoryWatcherManager::Get()
+static std::shared_ptr<pragma::filesystem::DirectoryWatcherManager> g_DirectoryWatcherManager;
+const std::shared_ptr<pragma::filesystem::DirectoryWatcherManager> &pragma::filesystem::DirectoryWatcherManager::Get()
 {
 	if(!g_DirectoryWatcherManager)
 		g_DirectoryWatcherManager = std::shared_ptr<DirectoryWatcherManager> {new DirectoryWatcherManager {}};
 	return g_DirectoryWatcherManager;
 }
 
-void filemanager::close_file_watcher() { g_DirectoryWatcherManager = nullptr; }
+void pragma::filesystem::close_file_watcher() { g_DirectoryWatcherManager = nullptr; }
 
-std::optional<DirectoryWatchListenerSet> filemanager::DirectoryWatcherManager::AddWatch(const std::string_view &path, bool absolutePath, bool recursive)
+std::optional<pragma::filesystem::DirectoryWatchListenerSet> pragma::filesystem::DirectoryWatcherManager::AddWatch(const std::string_view &path, bool absolutePath, bool recursive)
 {
 	auto normPath = util::DirPath(path);
 	DirectoryWatchListenerSet set;
 	auto addWatch = [this, &set, recursive](const util::Path &rootPath, const util::Path &relPath) {
-		auto absPath = util::DirPath(rootPath, relPath);
-		if(!filemanager::exists_system(absPath.GetString()))
+		auto absPath = pragma::util::DirPath(rootPath, relPath);
+		if(!exists_system(absPath.GetString()))
 			return;
 		auto listener = std::make_shared<DirectoryWatchListener>(*this, rootPath);
 		efsw::WatchID watchId = m_fileWatcher->addWatch(absPath.GetString(), listener.get(), recursive);
@@ -173,7 +175,7 @@ std::optional<DirectoryWatchListenerSet> filemanager::DirectoryWatcherManager::A
 	if(absolutePath)
 		addWatch({}, util::DirPath(path));
 	else {
-		auto &rootPaths = filemanager::get_absolute_root_paths();
+		auto &rootPaths = get_absolute_root_paths();
 		set.listeners.reserve(rootPaths.size());
 		for(auto &rootPath : rootPaths)
 			addWatch(rootPath, std::string {path});
@@ -182,16 +184,16 @@ std::optional<DirectoryWatchListenerSet> filemanager::DirectoryWatcherManager::A
 		return {};
 	return set;
 }
-void filemanager::DirectoryWatcherManager::RemoveWatch(efsw::WatchID watchId) { m_fileWatcher->removeWatch(watchId); }
+void pragma::filesystem::DirectoryWatcherManager::RemoveWatch(efsw::WatchID watchId) { m_fileWatcher->removeWatch(watchId); }
 
-DirectoryWatcher::DirectoryWatcher(const std::string &path, WatchFlags flags, filemanager::DirectoryWatcherManager *watcherManager) : m_path {path}, m_watchFlags {flags}, m_watcherManager {watcherManager ? *watcherManager : *filemanager::DirectoryWatcherManager::Get()}
+pragma::filesystem::DirectoryWatcher::DirectoryWatcher(const std::string &path, WatchFlags flags, DirectoryWatcherManager *watcherManager) : m_path {path}, m_watchFlags {flags}, m_watcherManager {watcherManager ? *watcherManager : *DirectoryWatcherManager::Get()}
 {
-	SetEnabled(!umath::is_flag_set(flags, WatchFlags::StartDisabled));
+	SetEnabled(!math::is_flag_set(flags, WatchFlags::StartDisabled));
 }
 
-DirectoryWatcher::~DirectoryWatcher() {}
+pragma::filesystem::DirectoryWatcher::~DirectoryWatcher() {}
 
-void DirectoryWatcher::UpdateEnabledState()
+void pragma::filesystem::DirectoryWatcher::UpdateEnabledState()
 {
 	if(!m_enabled) {
 		if(m_watchListenerSet) {
@@ -202,8 +204,8 @@ void DirectoryWatcher::UpdateEnabledState()
 		return;
 	}
 	if(!m_watchListenerSet) {
-		auto absolutePath = umath::is_flag_set(m_watchFlags, WatchFlags::AbsolutePath);
-		auto recursive = umath::is_flag_set(m_watchFlags, WatchFlags::WatchSubDirectories);
+		auto absolutePath = math::is_flag_set(m_watchFlags, WatchFlags::AbsolutePath);
+		auto recursive = math::is_flag_set(m_watchFlags, WatchFlags::WatchSubDirectories);
 		auto listenerSet = m_watcherManager.AddWatch(m_path, absolutePath, recursive);
 
 		if(listenerSet)
@@ -215,32 +217,32 @@ void DirectoryWatcher::UpdateEnabledState()
 	}
 }
 
-void DirectoryWatcher::SetEnabled(bool enabled)
+void pragma::filesystem::DirectoryWatcher::SetEnabled(bool enabled)
 {
 	m_enabled = enabled;
 	UpdateEnabledState();
 }
-bool DirectoryWatcher::IsEnabled() const { return m_enabled; }
+bool pragma::filesystem::DirectoryWatcher::IsEnabled() const { return m_enabled; }
 
-uint32_t DirectoryWatcher::Poll()
+uint32_t pragma::filesystem::DirectoryWatcher::Poll()
 {
 	if(!m_watchListenerSet)
 		return 0;
 	return m_watchListenerSet->Poll([this](const std::string &fileName) { OnFileModified(fileName); });
 }
 
-std::shared_ptr<filemanager::DirectoryWatcherManager> filemanager::create_directory_watcher_manager() { return std::shared_ptr<DirectoryWatcherManager> {new DirectoryWatcherManager {}}; }
+std::shared_ptr<pragma::filesystem::DirectoryWatcherManager> pragma::filesystem::create_directory_watcher_manager() { return std::shared_ptr<DirectoryWatcherManager> {new DirectoryWatcherManager {}}; }
 
 ///////////////////////
 
-DirectoryWatcherCallback::DirectoryWatcherCallback(const std::string &path, const std::function<void(const std::string &)> &onFileModified, WatchFlags flags, filemanager::DirectoryWatcherManager *watcherManager)
+pragma::filesystem::DirectoryWatcherCallback::DirectoryWatcherCallback(const std::string &path, const std::function<void(const std::string &)> &onFileModified, WatchFlags flags, DirectoryWatcherManager *watcherManager)
     : DirectoryWatcher(path, flags, watcherManager), m_onFileModified(onFileModified)
 {
 }
 
-void DirectoryWatcherCallback::OnFileModified(const std::string &fName) { m_onFileModified(fName); }
+void pragma::filesystem::DirectoryWatcherCallback::OnFileModified(const std::string &fName) { m_onFileModified(fName); }
 
-std::ostream &operator<<(std::ostream &out, const DirectoryWatcherCallback &o)
+std::ostream &pragma::filesystem::operator<<(std::ostream &out, const DirectoryWatcherCallback &o)
 {
 	out << "DirectoryListener[" << o.GetPath() << "]";
 	return out;
