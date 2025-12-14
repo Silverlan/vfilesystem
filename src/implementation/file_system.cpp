@@ -144,7 +144,7 @@ DLLFSYSTEM
 #endif
   pragma::filesystem::VFilePtrReal pragma::filesystem::FileManager::OpenFile<pragma::filesystem::VFilePtrReal>(const char *cpath, const char *mode, std::string *optOutErr, SearchFlags includeFlags, SearchFlags excludeFlags)
 {
-	return std::static_pointer_cast<fs::VFilePtrInternalReal>(OpenFile(cpath, mode, optOutErr, includeFlags, excludeFlags));
+	return std::static_pointer_cast<VFilePtrInternalReal>(OpenFile(cpath, mode, optOutErr, includeFlags, excludeFlags));
 }
 
 template<>
@@ -153,7 +153,7 @@ DLLFSYSTEM
 #endif
   pragma::filesystem::VFilePtrVirtual pragma::filesystem::FileManager::OpenFile<pragma::filesystem::VFilePtrVirtual>(const char *cpath, const char *mode, std::string *optOutErr, SearchFlags includeFlags, SearchFlags excludeFlags)
 {
-	return std::static_pointer_cast<fs::VFilePtrInternalVirtual>(OpenFile(cpath, mode, optOutErr, includeFlags, excludeFlags));
+	return std::static_pointer_cast<VFilePtrInternalVirtual>(OpenFile(cpath, mode, optOutErr, includeFlags, excludeFlags));
 }
 
 decltype(pragma::filesystem::FileManager::m_vroot) pragma::filesystem::FileManager::m_vroot;
@@ -166,7 +166,7 @@ static std::shared_mutex g_customMountMutex {};
 static std::mutex g_packageMutex {};
 static std::shared_mutex g_rootPathMutex {};
 
-void pragma::filesystem::FileManager::SetCustomFileHandler(const std::function<fs::VFilePtr(const std::string &, const char *mode)> &fHandler) { m_customFileHandler = fHandler; }
+void pragma::filesystem::FileManager::SetCustomFileHandler(const std::function<VFilePtr(const std::string &, const char *mode)> &fHandler) { m_customFileHandler = fHandler; }
 
 std::string pragma::filesystem::FileManager::GetNormalizedPath(std::string path)
 {
@@ -307,7 +307,7 @@ bool pragma::filesystem::FileManager::IsBinaryMode(const char *mode)
 pragma::filesystem::VFilePtrReal pragma::filesystem::FileManager::OpenSystemFile(const char *cpath, const char *mode, std::string *optOutErr)
 {
 	std::string path = GetCanonicalizedPath(cpath);
-	auto ptrReal = std::make_shared<fs::VFilePtrInternalReal>();
+	auto ptrReal = std::make_shared<VFilePtrInternalReal>();
 	int err = 0;
 	if(!ptrReal->Construct(path.c_str(), mode, &err)) {
 		if(optOutErr)
@@ -360,7 +360,7 @@ pragma::filesystem::VFilePtr pragma::filesystem::FileManager::OpenFile(const cha
 		if((includeFlags & SearchFlags::Local) == SearchFlags::None)
 			return NULL;
 		std::string fpath = util::FilePath(get_program_write_path(), path).GetString();
-		auto ptrReal = std::make_shared<fs::VFilePtrInternalReal>();
+		auto ptrReal = std::make_shared<VFilePtrInternalReal>();
 		if(ptrReal->Construct(fpath.c_str(), mode)) {
 			pfile = ptrReal;
 			pfile->m_bBinary = bBinary;
@@ -376,7 +376,7 @@ pragma::filesystem::VFilePtr pragma::filesystem::FileManager::OpenFile(const cha
 	if((includeFlags & SearchFlags::Virtual) == SearchFlags::Virtual) {
 		VFile *f = m_vroot.GetFile(path);
 		if(f != NULL) {
-			auto pfile = std::make_shared<fs::VFilePtrInternalVirtual>(f);
+			auto pfile = std::make_shared<VFilePtrInternalVirtual>(f);
 			pfile->m_bBinary = bBinary;
 			pfile->m_bRead = true;
 			return pfile;
@@ -415,7 +415,7 @@ pragma::filesystem::VFilePtr pragma::filesystem::FileManager::OpenFile(const cha
 	}
 	if(bFound == false)
 		fpath = path;
-	auto ptrReal = std::make_shared<fs::VFilePtrInternalReal>();
+	auto ptrReal = std::make_shared<VFilePtrInternalReal>();
 	int err = 0;
 	if(!ptrReal->Construct(fpath.c_str(), mode, &err)) {
 		if(optOutErr)
@@ -1091,7 +1091,7 @@ bool pragma::filesystem::FileManager::Exists(std::string name, SearchFlags inclu
 #define INVALID_FILE_ATTRIBUTES ((unsigned int)-1)
 #endif
 
-unsigned long long get_file_attributes(const std::string &fpath)
+static unsigned long long get_file_attributes(const std::string &fpath)
 {
 #ifdef __linux__
 	class stat st;
@@ -1125,7 +1125,7 @@ std::uint64_t pragma::filesystem::FileManager::GetFileAttributes(std::string nam
 			std::string fpath = mountPath + DIR_SEPARATOR + name;
 			if(bAbsolute == false)
 				fpath = appPath + DIR_SEPARATOR + fpath;
-			auto attrs = get_file_attributes(fpath);
+			auto attrs = ::get_file_attributes(fpath);
 			if(attrs != INVALID_FILE_ATTRIBUTES)
 				return attrs;
 		}
@@ -1257,7 +1257,7 @@ bool pragma::filesystem::FileManager::CopyFile(const char *cfile, const char *cf
 	if(src == NULL)
 		return false;
 	std::string fNewPath = GetCanonicalizedPath(cfNewPath);
-	auto tgt = OpenFile<fs::VFilePtrReal>(fNewPath.c_str(), "wb");
+	auto tgt = OpenFile<VFilePtrReal>(fNewPath.c_str(), "wb");
 	if(tgt == NULL)
 		return false;
 	unsigned long long size = src->GetSize();
@@ -1272,8 +1272,8 @@ bool pragma::filesystem::FileManager::CopyFile(const char *cfile, const char *cf
 		tgt->Write(&data[0], size);
 	}
 	delete[] data;
-	auto *srcR = dynamic_cast<fs::VFilePtrInternalReal *>(src.get());
-	auto *tgtR = dynamic_cast<fs::VFilePtrInternalReal *>(tgt.get());
+	auto *srcR = dynamic_cast<VFilePtrInternalReal *>(src.get());
+	auto *tgtR = dynamic_cast<VFilePtrInternalReal *>(tgt.get());
 	if(srcR && tgtR && is_executable(srcR->GetPath()))
 		make_executable(tgtR->GetPath());
 	return true;

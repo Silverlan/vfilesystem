@@ -16,7 +16,7 @@ size_t pragma::filesystem::File::Write(const void *data, size_t size)
 	auto type = m_file->GetType();
 	if(type != EVFile::Local)
 		return 0;
-	return static_cast<fs::VFilePtrInternalReal *>(m_file.get())->Write(data, size);
+	return static_cast<VFilePtrInternalReal *>(m_file.get())->Write(data, size);
 }
 bool pragma::filesystem::File::Eof() { return m_file->Eof(); }
 size_t pragma::filesystem::File::GetSize() { return m_file->GetSize(); }
@@ -36,7 +36,7 @@ void pragma::filesystem::File::Seek(size_t offset, Whence whence)
 int32_t pragma::filesystem::File::ReadChar() { return m_file->ReadChar(); }
 std::optional<std::string> pragma::filesystem::File::GetFileName() const
 {
-	auto *f = dynamic_cast<fs::VFilePtrInternalReal *>(m_file.get());
+	auto *f = dynamic_cast<VFilePtrInternalReal *>(m_file.get());
 	if(!f)
 		return {};
 	return f->GetPath();

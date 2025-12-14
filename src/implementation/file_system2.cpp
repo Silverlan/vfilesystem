@@ -165,7 +165,7 @@ pragma::filesystem::VFilePtr pragma::filesystem::open_file(const std::string_vie
 
 bool pragma::filesystem::write_file(const std::string_view &path, const std::string_view &contents)
 {
-	auto f = open_file<fs::VFilePtrReal>(path, FileMode::Write | FileMode::Binary);
+	auto f = open_file<VFilePtrReal>(path, FileMode::Write | FileMode::Binary);
 	if(!f)
 		return false;
 	f->WriteString(contents, false);
@@ -232,15 +232,15 @@ std::string pragma::filesystem::get_canonicalized_path(const std::string_view &p
 std::string pragma::filesystem::get_sub_path(const std::string_view &path) { return FileManager::GetSubPath(std::string {path}); }
 std::optional<std::filesystem::file_time_type> pragma::filesystem::get_last_write_time(const std::string_view &path, SearchFlags includeFlags, SearchFlags excludeFlags) { return FileManager::GetLastWriteTime(path, includeFlags, excludeFlags); }
 std::uint64_t pragma::filesystem::get_file_size(const std::string_view &name, SearchFlags fsearchmode) { return FileManager::GetFileSize(std::string {name}, fsearchmode); }
-bool pragma::filesystem::exists(const std::string_view &name, SearchFlags includeFlags, SearchFlags excludeFlags) { return fs::exists(std::string {name}, includeFlags, excludeFlags); }
+bool pragma::filesystem::exists(const std::string_view &name, SearchFlags includeFlags, SearchFlags excludeFlags) { return FileManager::Exists(std::string {name}, includeFlags, excludeFlags); }
 bool pragma::filesystem::is_file(const std::string_view &name, SearchFlags fsearchmode) { return FileManager::IsFile(std::string {name}, fsearchmode); }
 bool pragma::filesystem::is_dir(const std::string_view &name, SearchFlags fsearchmode) { return FileManager::IsDir(std::string {name}, fsearchmode); }
 bool pragma::filesystem::exists_system(const std::string_view &name) { return FileManager::ExistsSystem(std::string {name}); }
 bool pragma::filesystem::is_system_file(const std::string_view &name) { return FileManager::IsSystemFile(std::string {name}); }
-bool pragma::filesystem::is_system_dir(const std::string_view &name) { return fs::is_system_dir(std::string {name}); }
+bool pragma::filesystem::is_system_dir(const std::string_view &name) { return FileManager::IsSystemDir(std::string {name}); }
 std::uint64_t pragma::filesystem::get_file_attributes(const std::string_view &name) { return FileManager::GetFileAttributes(std::string {name}); }
 pragma::filesystem::FVFile pragma::filesystem::get_file_flags(const std::string_view &name, SearchFlags includeFlags, SearchFlags excludeFlags) { return FileManager::GetFileFlags(std::string {name}, includeFlags, excludeFlags); }
-std::string pragma::filesystem::get_normalized_path(const std::string_view &path) { return pragma::fs::get_normalized_path(std::string {path}); }
+std::string pragma::filesystem::get_normalized_path(const std::string_view &path) { return FileManager::GetNormalizedPath(std::string {path}); }
 void pragma::filesystem::find_files(const std::string_view &cfind, std::vector<std::string> *resfiles, std::vector<std::string> *resdirs, bool bKeepPath, SearchFlags includeFlags, SearchFlags excludeFlag)
 {
 	FileManager::FindFiles(cfind.data(), resfiles, resdirs, bKeepPath, includeFlags, excludeFlag);
