@@ -82,6 +82,9 @@ void pragma::filesystem::FileIndexCache::Add(const std::string_view &path, Type 
 	auto hash = Hash(path, false);
 	std::unique_lock lock {m_cacheMutex};
 	m_indexCache[hash].type = type;
+#ifdef VFILESYSTEM_STORE_FILE_INDEX_CACHE_PATHS
+	m_indexCache[hash].path = std::string {path};
+#endif
 }
 void pragma::filesystem::FileIndexCache::Remove(const std::string_view &path)
 {
@@ -172,6 +175,9 @@ void pragma::filesystem::FileIndexCache::IterateFiles(size_t rootLen, const std:
 		if(path_to_string(path, strPath) == false)
 			return;
 		auto hash = Hash(strPath.substr(rootLen), false);
+#ifdef VFILESYSTEM_STORE_FILE_INDEX_CACHE_PATHS
+		info.path = strPath.substr(rootLen);
+#endif
 		localCache.push_back(std::make_pair(hash, info));
 	};
 	for(auto &dir : std::filesystem::directory_iterator(path)) {

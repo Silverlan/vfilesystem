@@ -21,6 +21,9 @@ export {
 			};
 			struct ItemInfo {
 				Type type;
+#ifdef VFILESYSTEM_STORE_FILE_INDEX_CACHE_PATHS
+				std::string path;
+#endif
 			};
 			FileIndexCache();
 			~FileIndexCache();
@@ -35,6 +38,7 @@ export {
 			void Add(const std::string_view &path, Type type);
 			void Remove(const std::string_view &path);
 			const std::string &GetRootPath() const { return m_rootPath; }
+			const std::unordered_map<size_t, ItemInfo> &GetIndexCache() const { return m_indexCache; };
 		  private:
 			void NormalizePath(std::string &path) const;
 			size_t Hash(const std::string_view &key, bool isAbsolutePath) const;
