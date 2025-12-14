@@ -804,60 +804,6 @@ void pragma::filesystem::FileManager::FindSystemFiles(const char *path, std::vec
 	::find_files(npath, target, "", resfiles, resdirs, bKeepPath);
 }
 
-#ifdef __linux__
-static void explodeString(std::string str, const char *sep, std::vector<std::string> *subStrings)
-{
-	size_t st = str.find_first_of(sep);
-	while(st != std::string::npos) {
-		std::string sub = str.substr(0, st);
-		str = str.substr(st + 1);
-		subStrings->push_back(sub);
-		st = str.find_first_of(sep);
-	}
-	subStrings->push_back(str);
-}
-
-static std::string normalizePath(std::string &path)
-{
-	std::string::iterator it;
-	for(size_t i = 0; i < path.length(); i++) {
-		if(path[i] == ' ' || path[i] == '\t' || path[i] == '\f' || path[i] == '\v' || path[i] == '\n' || path[i] == '\r') {
-			path.erase(path.begin() + i);
-			i--;
-		}
-	}
-
-	std::vector<std::string> sub;
-	explodeString(path, "\\", &sub);
-	size_t l = sub.size();
-	for(size_t i = 0; i < l;) {
-		if(sub[i].empty() || sub[i] == ".") {
-			sub.erase(sub.begin() + i);
-			l--;
-		}
-		else if(sub[i] == "..") {
-			sub.erase(sub.begin() + i);
-			if(i > 0) {
-				sub.erase(sub.begin() + (i - 1));
-				i--;
-				l--;
-			}
-			l--;
-		}
-		else
-			i++;
-	}
-	std::string outPath = "";
-	l = sub.size();
-	for(size_t i = 0; i < l; i++) {
-		outPath += sub[i];
-		if(i < (l - 1))
-			outPath += '\\';
-	}
-	return outPath;
-}
-#endif
-
 std::string pragma::filesystem::FileManager::GetCanonicalizedPath(std::string path)
 {
 	util::canonicalize_path(path);
@@ -1202,7 +1148,7 @@ bool pragma::filesystem::FileManager::ExistsSystem(std::string name)
 	std::replace(name.begin(), name.end(), '\\', '/');
 #endif
 	impl::to_case_sensitive_path(name);
-	return (get_file_flags(name) & FVFile::Invalid) == FVFile::None;
+	return (::get_file_flags(name) & FVFile::Invalid) == FVFile::None;
 }
 bool pragma::filesystem::FileManager::IsSystemFile(std::string name)
 {
@@ -1211,7 +1157,7 @@ bool pragma::filesystem::FileManager::IsSystemFile(std::string name)
 	std::replace(name.begin(), name.end(), '\\', '/');
 #endif
 	impl::to_case_sensitive_path(name);
-	return (get_file_flags(name) & (FVFile::Directory | FVFile::Invalid)) == FVFile::None;
+	return (::get_file_flags(name) & (FVFile::Directory | FVFile::Invalid)) == FVFile::None;
 }
 bool pragma::filesystem::FileManager::IsSystemDir(std::string name)
 {
@@ -1220,7 +1166,7 @@ bool pragma::filesystem::FileManager::IsSystemDir(std::string name)
 	std::replace(name.begin(), name.end(), '\\', '/');
 #endif
 	impl::to_case_sensitive_path(name);
-	return (get_file_flags(name) & (FVFile::Directory | FVFile::Invalid)) == FVFile::Directory;
+	return (::get_file_flags(name) & (FVFile::Directory | FVFile::Invalid)) == FVFile::Directory;
 }
 
 bool pragma::filesystem::FileManager::CopySystemFile(const char *cfile, const char *cfNewPath)
