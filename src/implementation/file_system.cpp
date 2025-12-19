@@ -500,7 +500,7 @@ static bool remove_directory(const std::string &rootPath, const char *cdir, cons
 		return false;
 	auto r = ::RemoveDirectoryW(wp->c_str());
 	if(r != 0)
-		pragma::filesystem::FileManager::update_file_index_cache(p, true);
+		pragma::filesystem::update_file_index_cache(p, true);
 	return (r != 0) ? true : false;
 #else
 	std::replace(p.begin(), p.end(), '\\', '/');
