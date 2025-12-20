@@ -262,12 +262,14 @@ export namespace pragma::filesystem {
 		int WriteString(const std::string_view &sv, bool withBinaryZeroByte = true);
 		bool ReOpen(const char *mode);
 	};
-
 #pragma warning(pop)
 }
 
 export {
 	REGISTER_ENUM_FLAGS(pragma::filesystem::FileMode)
+	namespace pragma::filesystem {
+		using namespace pragma::math::scoped_enum::bitwise;
+	}
 }
 
 namespace pragma::filesystem {
