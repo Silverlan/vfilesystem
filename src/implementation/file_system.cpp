@@ -3,8 +3,6 @@
 
 module;
 
-#include "definitions.hpp"
-
 #ifdef __linux__
 
 #include <sys/types.h>

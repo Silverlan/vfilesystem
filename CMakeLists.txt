@@ -13,6 +13,7 @@ endif()
 
 set(PROJ_NAME vfilesystem)
 pr_add_library(${PROJ_NAME} ${LIB_TYPE})
+pr_add_export_macro(${PROJ_NAME} DLLFSYSTEM)
 
 pr_add_dependency(${PROJ_NAME} sharedutils TARGET PUBLIC)
 pr_add_dependency(${PROJ_NAME} bz2 TARGET)
