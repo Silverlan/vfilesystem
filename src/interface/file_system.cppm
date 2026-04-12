@@ -143,7 +143,7 @@ export namespace pragma::filesystem {
 	DLLFSYSTEM VFilePtr open_file(const std::string_view &path, FileMode mode, std::string *optOutErr = nullptr, SearchFlags includeFlags = SearchFlags::All, SearchFlags excludeFlags = SearchFlags::None);
 	DLLFSYSTEM bool write_file(const std::string_view &path, const std::string_view &contents);
 	DLLFSYSTEM std::optional<std::string> read_file(const std::string_view &path);
-	DLLFSYSTEM void set_use_file_index_cache(bool useCache);
+	DLLFSYSTEM void set_use_file_index_cache(bool useCache, util::HeapGroup *heapGroup = nullptr);
 	DLLFSYSTEM RootPathFileCacheManager *get_root_path_file_cache_manager();
 	DLLFSYSTEM void update_file_index_cache(const std::string_view &path, bool absolutePath = false);
 	// Force path into cache, even if file doesn't exist

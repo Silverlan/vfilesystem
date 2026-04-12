@@ -21,7 +21,7 @@ export {
 				std::string path;
 #endif
 			};
-			FileIndexCache();
+			FileIndexCache(util::HeapGroup *heapGroup = nullptr);
 			~FileIndexCache();
 
 			void Reset(std::string rootPath);
@@ -35,6 +35,7 @@ export {
 			void Remove(const std::string_view &path);
 			const std::string &GetRootPath() const { return m_rootPath; }
 			const std::unordered_map<size_t, ItemInfo> &GetIndexCache() const { return m_indexCache; };
+			const util::HeapGroup *GetHeapGroup() const { return m_heapGroup; }
 		  private:
 			void NormalizePath(std::string &path) const;
 			size_t Hash(const std::string_view &key, bool isAbsolutePath) const;
@@ -51,13 +52,14 @@ export {
 			ctpl::thread_pool m_pool;
 			bool m_caseSensitive = false;
 			std::atomic<uint32_t> m_pending = 0;
+			const util::HeapGroup *m_heapGroup = nullptr;
 		};
 
 		/////////////////////
 
 		class DLLFSYSTEM RootPathFileCacheManager {
 		  public:
-			RootPathFileCacheManager();
+			RootPathFileCacheManager(util::HeapGroup *heapGroup = nullptr);
 
 			RootPathFileCacheManager(const RootPathFileCacheManager &) = delete;
 			RootPathFileCacheManager &operator=(const RootPathFileCacheManager &) = delete;
@@ -79,6 +81,7 @@ export {
 		  private:
 			std::unordered_map<std::string, std::unique_ptr<FileIndexCache>> m_caches;
 			FileIndexCache *m_primaryCache = nullptr;
+			util::HeapGroup *m_heapGroup = nullptr;
 		};
 	};
 }

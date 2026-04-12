@@ -28,13 +28,13 @@ import :file_system;
 #undef CopyFile
 
 static std::unique_ptr<pragma::filesystem::RootPathFileCacheManager> g_rootPathFileCacheManager {};
-void pragma::filesystem::set_use_file_index_cache(bool useCache)
+void pragma::filesystem::set_use_file_index_cache(bool useCache, util::HeapGroup *heapGroup)
 {
 	if(!useCache) {
 		g_rootPathFileCacheManager = nullptr;
 		return;
 	}
-	g_rootPathFileCacheManager = std::make_unique<RootPathFileCacheManager>();
+	g_rootPathFileCacheManager = std::make_unique<RootPathFileCacheManager>(heapGroup);
 	reset_file_index_cache();
 }
 pragma::filesystem::RootPathFileCacheManager *pragma::filesystem::get_root_path_file_cache_manager() { return g_rootPathFileCacheManager.get(); }

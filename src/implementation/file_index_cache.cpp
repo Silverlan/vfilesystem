@@ -46,7 +46,7 @@ size_t pragma::filesystem::FileIndexCache::Hash(const std::string_view &key, boo
 	return hash;
 }
 
-pragma::filesystem::FileIndexCache::FileIndexCache() : m_pool {5}
+pragma::filesystem::FileIndexCache::FileIndexCache(util::HeapGroup *heapGroup) : m_pool {5}, m_heapGroup {heapGroup}
 {
 	auto n = m_pool.size();
 	for(auto i = decltype(n) {0u}; i < n; ++i)
@@ -206,9 +206,9 @@ void pragma::filesystem::FileIndexCache::IterateFiles(size_t rootLen, const std:
 
 /////////////////////
 
-pragma::filesystem::RootPathFileCacheManager::RootPathFileCacheManager()
+pragma::filesystem::RootPathFileCacheManager::RootPathFileCacheManager(util::HeapGroup *heapGroup) : m_heapGroup {heapGroup}
 {
-	auto cache = std::make_unique<FileIndexCache>();
+	auto cache = std::make_unique<FileIndexCache>(heapGroup);
 	m_primaryCache = cache.get();
 	m_caches["primary"] = std::move(cache);
 }
@@ -221,7 +221,7 @@ void pragma::filesystem::RootPathFileCacheManager::AddRootReadOnlyLocation(const
 {
 	if(identifier == "primary")
 		throw std::runtime_error {"'primary' root location is reserved"};
-	auto cache = std::make_unique<FileIndexCache>();
+	auto cache = std::make_unique<FileIndexCache>(m_heapGroup);
 	cache->Reset(std::string {rootPath});
 	m_caches[identifier] = std::move(cache);
 }
