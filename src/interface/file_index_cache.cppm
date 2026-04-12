@@ -48,7 +48,7 @@ export {
 			std::mutex m_taskCompletedMutex;
 
 			std::string m_rootPath;
-			ctpl::thread_pool m_pool;
+			BS::light_thread_pool m_pool;
 			bool m_caseSensitive = false;
 			std::atomic<uint32_t> m_pending = 0;
 		};

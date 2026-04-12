@@ -46,14 +46,17 @@ size_t pragma::filesystem::FileIndexCache::Hash(const std::string_view &key, boo
 	return hash;
 }
 
-pragma::filesystem::FileIndexCache::FileIndexCache() : m_pool {5}
+pragma::filesystem::FileIndexCache::FileIndexCache()
 {
-	auto n = m_pool.size();
-	for(auto i = decltype(n) {0u}; i < n; ++i)
-		util::set_thread_name(m_pool.get_thread(i), "fsys_index_cache");
+	constexpr size_t numThreads = 5;
+	std::atomic<int> thread_counter {0};
+	m_pool.reset(numThreads, [this, &thread_counter]() {
+		util::set_thread_name("fsys_index_cache");
+	});
+	m_pool.wait();
 }
 
-pragma::filesystem::FileIndexCache::~FileIndexCache() { m_pool.stop(); }
+pragma::filesystem::FileIndexCache::~FileIndexCache() { m_pool.purge(); }
 
 void pragma::filesystem::FileIndexCache::NormalizePath(std::string &path) const
 {
@@ -115,9 +118,8 @@ pragma::filesystem::FileIndexCache::Type pragma::filesystem::FileIndexCache::Fin
 void pragma::filesystem::FileIndexCache::Reset(std::string rootPath)
 {
 	rootPath = util::DirPath(rootPath).GetString();
-	m_pool.clear_queue();
-	while(m_pool.n_idle() != m_pool.size())
-		;
+	m_pool.purge();
+	m_pool.wait();
 	m_pending = 0;
 	Wait();
 	m_indexCache.clear();
@@ -145,7 +147,7 @@ void pragma::filesystem::FileIndexCache::QueuePath(const std::filesystem::path &
 	if(path_to_string(path, strPath) == false)
 		return;
 	auto len = strPath.length();
-	m_pool.push([this, entry, len](int id) {
+	m_pool.detach_task([this, entry, len]() {
 		IterateFiles(len, entry);
 		DecrementPending();
 	});
@@ -155,7 +157,7 @@ void pragma::filesystem::FileIndexCache::QueuePath(size_t rootLen, const std::fi
 {
 	++m_pending;
 
-	m_pool.push([this, path, rootLen](int id) {
+	m_pool.detach_task([this, path, rootLen]() {
 		IterateFiles(rootLen, path);
 		DecrementPending();
 	});
