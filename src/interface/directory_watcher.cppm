@@ -8,6 +8,7 @@ module;
 export module pragma.filesystem:directory_watcher;
 
 import pragma.math;
+import pragma.util;
 
 export namespace pragma::filesystem {
 	class DirectoryWatcherManager;
@@ -46,11 +47,12 @@ export namespace pragma::filesystem {
 	};
 
 	class DLLFSYSTEM DirectoryWatcherCallback : public DirectoryWatcher {
-	  protected:
-		std::function<void(const std::string &)> m_onFileModified;
-		virtual void OnFileModified(const std::string &fName) override;
 	  public:
-		DirectoryWatcherCallback(const std::string &path, const std::function<void(const std::string &)> &onFileModified, WatchFlags flags = WatchFlags::None, DirectoryWatcherManager *watcherManager = nullptr);
+		using CallbackFunction = std::function<void(const util::Path &, const util::Path &)>;
+		DirectoryWatcherCallback(const std::string &path, const CallbackFunction &onFileModified, WatchFlags flags = WatchFlags::None, DirectoryWatcherManager *watcherManager = nullptr);
+	  protected:
+		CallbackFunction m_onFileModified;
+		virtual void OnFileModified(const std::string &fName) override;
 	};
 	DLLFSYSTEM std::ostream &operator<<(std::ostream &out, const DirectoryWatcherCallback &o);
 

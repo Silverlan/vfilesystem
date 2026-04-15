@@ -235,12 +235,18 @@ std::shared_ptr<pragma::filesystem::DirectoryWatcherManager> pragma::filesystem:
 
 ///////////////////////
 
-pragma::filesystem::DirectoryWatcherCallback::DirectoryWatcherCallback(const std::string &path, const std::function<void(const std::string &)> &onFileModified, WatchFlags flags, DirectoryWatcherManager *watcherManager)
+pragma::filesystem::DirectoryWatcherCallback::DirectoryWatcherCallback(const std::string &path, const CallbackFunction &onFileModified, WatchFlags flags, DirectoryWatcherManager *watcherManager)
     : DirectoryWatcher(path, flags, watcherManager), m_onFileModified(onFileModified)
 {
 }
 
-void pragma::filesystem::DirectoryWatcherCallback::OnFileModified(const std::string &fName) { m_onFileModified(fName); }
+void pragma::filesystem::DirectoryWatcherCallback::OnFileModified(const std::string &fName)
+{
+	auto basePath = util::DirPath(GetPath());
+	auto relPath = util::FilePath(fName);
+	relPath.MakeRelative(basePath);
+	m_onFileModified(basePath, relPath);
+}
 
 std::ostream &pragma::filesystem::operator<<(std::ostream &out, const DirectoryWatcherCallback &o)
 {
