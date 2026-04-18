@@ -31,12 +31,13 @@ class DirectoryWatchListener : public efsw::FileWatchListener {
 	void SetEnabled(bool enabled);
 	void handleFileAction(efsw::WatchID watchid, const std::string &dir, const std::string &filename, efsw::Action action, std::string oldFilename) override;
 
-	uint32_t Poll(const std::function<void(const std::string &)> &onModified);
+	uint32_t Poll(const std::function<void(const std::string &, pragma::filesystem::FileWatcherEvent)> &onModified);
   private:
 	struct FileEvent {
-		FileEvent(const std::string &fName);
+		FileEvent(const std::string &fName, pragma::filesystem::FileWatcherEvent event);
 		std::string fileName;
 		std::chrono::steady_clock::time_point time;
+		pragma::filesystem::FileWatcherEvent event;
 	};
 	std::unordered_map<std::string, FileEvent> m_fileStack;
 	std::atomic<bool> m_enabled = false;
@@ -57,48 +58,42 @@ DirectoryWatchListener::~DirectoryWatchListener()
 	m_watcherManager.lock()->RemoveWatch(m_watchId);
 }
 
-DirectoryWatchListener::FileEvent::FileEvent(const std::string &fName) : fileName(fName), time(std::chrono::steady_clock::now()) {}
+DirectoryWatchListener::FileEvent::FileEvent(const std::string &fName, pragma::filesystem::FileWatcherEvent event) : fileName(fName), event {event}, time(std::chrono::steady_clock::now()) {}
 
 void DirectoryWatchListener::SetWatchId(efsw::WatchID watchId) { m_watchId = watchId; }
+static pragma::filesystem::FileWatcherEvent efsw_action_to_pragma_event(efsw::Actions::Action action)
+{
+	switch(action) {
+	case efsw::Actions::Add:
+		return pragma::filesystem::FileWatcherEvent::Add;
+	case efsw::Actions::Delete:
+		return pragma::filesystem::FileWatcherEvent::Delete;
+	case efsw::Actions::Modified:
+		return pragma::filesystem::FileWatcherEvent::Modified;
+	case efsw::Actions::Moved:
+		return pragma::filesystem::FileWatcherEvent::Moved;
+	}
+	return pragma::filesystem::FileWatcherEvent::Unknown;
+}
 void DirectoryWatchListener::handleFileAction(efsw::WatchID watchid, const std::string &dir, const std::string &filename, efsw::Action action, std::string oldFilename)
 {
 	if(!m_enabled)
 		return;
-	switch(action) {
-	case efsw::Actions::Add:
-		//std::cout << "DIR (" << dir << ") FILE (" << filename << ") has event Added"
-		//			<< std::endl;
-		break;
-	case efsw::Actions::Delete:
-		//std::cout << "DIR (" << dir << ") FILE (" << filename << ") has event Delete"
-		//			<< std::endl;
-		break;
-	case efsw::Actions::Modified:
-		{
-			auto path = pragma::util::FilePath(dir, filename);
-			path.MakeRelative(m_rootPath);
-			auto &normPath = path.GetString();
-			std::unique_lock lock {m_fileMutex};
-			if(m_fileStack.find(normPath) == m_fileStack.end()) {
-				FileEvent ev {normPath};
-				ev.time = std::chrono::steady_clock::now();
-				m_fileStack.insert(std::make_pair(normPath, ev));
-				//std::cout << "DIR (" << dir << ") FILE (" << filename << ") has event Modified"
-				//			<< std::endl;
-			}
-			break;
-		}
-	case efsw::Actions::Moved:
-		//std::cout << "DIR (" << dir << ") FILE (" << filename << ") has event Moved from ("
-		//			<< oldFilename << ")" << std::endl;
-		break;
-	default:
-		// Unreachable
-		break;
+	auto event = efsw_action_to_pragma_event(action);
+	if(event == pragma::filesystem::FileWatcherEvent::Unknown)
+		return;
+	auto path = pragma::util::FilePath(dir, filename);
+	path.MakeRelative(m_rootPath);
+	auto &normPath = path.GetString();
+	std::unique_lock lock {m_fileMutex};
+	if(m_fileStack.find(normPath) == m_fileStack.end()) {
+		FileEvent ev {normPath, event};
+		ev.time = std::chrono::steady_clock::now();
+		m_fileStack.insert(std::make_pair(normPath, ev));
 	}
 }
 
-uint32_t DirectoryWatchListener::Poll(const std::function<void(const std::string &)> &onModified)
+uint32_t DirectoryWatchListener::Poll(const std::function<void(const std::string &, pragma::filesystem::FileWatcherEvent)> &onModified)
 {
 	uint32_t numChanged = 0;
 	std::unique_lock lock {m_fileMutex};
@@ -116,7 +111,7 @@ uint32_t DirectoryWatchListener::Poll(const std::function<void(const std::string
 			++numChanged;
 			auto path = pragma::util::FilePath(item.fileName);
 			path.MakeRelative(m_rootPath);
-			onModified(path.GetString());
+			onModified(path.GetString(), item.event);
 
 			it = m_fileStack.erase(it);
 		}
@@ -128,7 +123,7 @@ namespace pragma::filesystem {
 	struct DirectoryWatchListenerSet {
 		DirectoryWatchListenerSet() = default;
 		std::vector<std::shared_ptr<DirectoryWatchListener>> listeners;
-		uint32_t Poll(const std::function<void(const std::string &)> &onModified)
+		uint32_t Poll(const std::function<void(const std::string &, FileWatcherEvent)> &onModified)
 		{
 			uint32_t count = 0;
 			for(auto &listener : listeners)
@@ -228,24 +223,21 @@ uint32_t pragma::filesystem::DirectoryWatcher::Poll()
 {
 	if(!m_watchListenerSet)
 		return 0;
-	return m_watchListenerSet->Poll([this](const std::string &fileName) { OnFileModified(fileName); });
+	return m_watchListenerSet->Poll([this](const std::string &fileName, FileWatcherEvent event) { OnFileModified(fileName, event); });
 }
 
 std::shared_ptr<pragma::filesystem::DirectoryWatcherManager> pragma::filesystem::create_directory_watcher_manager() { return std::shared_ptr<DirectoryWatcherManager> {new DirectoryWatcherManager {}}; }
 
 ///////////////////////
 
-pragma::filesystem::DirectoryWatcherCallback::DirectoryWatcherCallback(const std::string &path, const CallbackFunction &onFileModified, WatchFlags flags, DirectoryWatcherManager *watcherManager)
-    : DirectoryWatcher(path, flags, watcherManager), m_onFileModified(onFileModified)
-{
-}
+pragma::filesystem::DirectoryWatcherCallback::DirectoryWatcherCallback(const std::string &path, const CallbackFunction &onFileModified, WatchFlags flags, DirectoryWatcherManager *watcherManager) : DirectoryWatcher(path, flags, watcherManager), m_onFileModified(onFileModified) {}
 
-void pragma::filesystem::DirectoryWatcherCallback::OnFileModified(const std::string &fName)
+void pragma::filesystem::DirectoryWatcherCallback::OnFileModified(const std::string &fName, FileWatcherEvent event)
 {
 	auto basePath = util::DirPath(GetPath());
 	auto relPath = util::FilePath(fName);
 	relPath.MakeRelative(basePath);
-	m_onFileModified(basePath, relPath);
+	m_onFileModified(basePath, relPath, event);
 }
 
 std::ostream &pragma::filesystem::operator<<(std::ostream &out, const DirectoryWatcherCallback &o)

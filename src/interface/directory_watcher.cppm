@@ -11,6 +11,15 @@ import pragma.math;
 import pragma.util;
 
 export namespace pragma::filesystem {
+	enum class FileWatcherEvent : uint8_t {
+		Add = 0,
+		Delete,
+		Modified,
+		Moved,
+
+		Unknown = std::numeric_limits<uint8_t>::max(),
+	};
+
 	class DirectoryWatcherManager;
 	struct DirectoryWatchListenerSet;
 	class DLLFSYSTEM DirectoryWatcher {
@@ -37,7 +46,7 @@ export namespace pragma::filesystem {
 		bool IsEnabled() const;
 	  protected:
 		void UpdateEnabledState();
-		virtual void OnFileModified(const std::string &fName) = 0;
+		virtual void OnFileModified(const std::string &fName, FileWatcherEvent event) = 0;
 	  private:
 		bool m_enabled = true;
 		std::string m_path;
@@ -48,11 +57,11 @@ export namespace pragma::filesystem {
 
 	class DLLFSYSTEM DirectoryWatcherCallback : public DirectoryWatcher {
 	  public:
-		using CallbackFunction = std::function<void(const util::Path &, const util::Path &)>;
+		using CallbackFunction = std::function<void(const util::Path &, const util::Path &, FileWatcherEvent event)>;
 		DirectoryWatcherCallback(const std::string &path, const CallbackFunction &onFileModified, WatchFlags flags = WatchFlags::None, DirectoryWatcherManager *watcherManager = nullptr);
 	  protected:
 		CallbackFunction m_onFileModified;
-		virtual void OnFileModified(const std::string &fName) override;
+		virtual void OnFileModified(const std::string &fName, FileWatcherEvent event) override;
 	};
 	DLLFSYSTEM std::ostream &operator<<(std::ostream &out, const DirectoryWatcherCallback &o);
 
