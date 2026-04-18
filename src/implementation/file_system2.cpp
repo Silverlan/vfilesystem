@@ -161,7 +161,10 @@ std::string pragma::filesystem::detail::to_string_mode(FileMode mode)
 	return strMode;
 }
 
-pragma::filesystem::VFilePtr pragma::filesystem::open_file(const std::string_view &path, FileMode mode, std::string *optOutErr, SearchFlags includeFlags, SearchFlags excludeFlags) { return FileManager::OpenFile(path.data(), detail::to_string_mode(mode).c_str(), optOutErr, includeFlags, excludeFlags); }
+pragma::filesystem::VFilePtr pragma::filesystem::open_file(const std::string_view &path, FileMode mode, std::string *optOutErr, SearchFlags includeFlags, SearchFlags excludeFlags)
+{
+	return FileManager::OpenFile(path.data(), detail::to_string_mode(mode).c_str(), optOutErr, includeFlags, excludeFlags);
+}
 
 bool pragma::filesystem::write_file(const std::string_view &path, const std::string_view &contents)
 {
@@ -205,7 +208,7 @@ void pragma::filesystem::register_packet_manager(const std::string_view &name, s
 bool pragma::filesystem::remove_file(const std::string_view &file) { return FileManager::RemoveFile(file.data()); }
 bool pragma::filesystem::remove_directory(const std::string_view &dir)
 {
-	auto absPath = FileManager::GetRootPath() + '\\' + std::string {dir};
+	auto absPath = (util::DirPath(FileManager::GetRootPath()) / std::string {dir}).GetString();
 	if(std::filesystem::is_directory(absPath) == false)
 		return false;
 	try {
