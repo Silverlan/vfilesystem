@@ -29,7 +29,7 @@ class DirectoryWatchListener : public efsw::FileWatchListener {
 	~DirectoryWatchListener();
 	void SetWatchId(efsw::WatchID watchId);
 	void SetEnabled(bool enabled);
-	void handleFileAction(efsw::WatchID watchid, const std::string &dir, const std::string &filename, efsw::Action action, std::string oldFilename) override;
+	void handleFileAction(efsw::WatchID watchid, const std::string &dir, const std::string &filename, efsw::Action action, const std::string &oldFilename) override;
 
 	uint32_t Poll(const std::function<void(const std::string &, pragma::filesystem::FileWatcherEvent)> &onModified);
   private:
@@ -75,7 +75,7 @@ static pragma::filesystem::FileWatcherEvent efsw_action_to_pragma_event(efsw::Ac
 	}
 	return pragma::filesystem::FileWatcherEvent::Unknown;
 }
-void DirectoryWatchListener::handleFileAction(efsw::WatchID watchid, const std::string &dir, const std::string &filename, efsw::Action action, std::string oldFilename)
+void DirectoryWatchListener::handleFileAction(efsw::WatchID watchid, const std::string &dir, const std::string &filename, efsw::Action action, const std::string &oldFilename)
 {
 	if(!m_enabled)
 		return;
