@@ -17,7 +17,7 @@ struct RootPathInfo {
 static std::vector<RootPathInfo> g_absoluteRootPaths {};
 static std::vector<pragma::util::Path> g_orderedAbsoluteRootPaths {};
 
-static std::string resolve_home_dir(const std::string_view &sv, bool filePath)
+std::string pragma::filesystem::resolve_home_directory(const std::string_view &sv, bool filePath)
 {
 #ifdef __linux__
 	if(sv.empty() || sv.front() != '~')
@@ -56,7 +56,7 @@ std::string pragma::filesystem::get_program_write_path()
 }
 void pragma::filesystem::set_absolute_root_path(const std::string_view &path, int32_t mountPriority)
 {
-	auto dirPath = util::DirPath(resolve_home_dir(path, false));
+	auto dirPath = util::DirPath(resolve_home_directory(path, false));
 	try {
 		std::filesystem::create_directories(dirPath.GetString());
 	}
@@ -71,7 +71,7 @@ void pragma::filesystem::set_absolute_root_path(const std::string_view &path, in
 }
 void pragma::filesystem::add_secondary_absolute_read_only_root_path(const std::string &identifier, const std::string_view &path, int32_t mountPriority)
 {
-	auto dirPath = util::DirPath(resolve_home_dir(path, false));
+	auto dirPath = util::DirPath(resolve_home_directory(path, false));
 	try {
 		std::filesystem::create_directories(dirPath.GetString());
 	}

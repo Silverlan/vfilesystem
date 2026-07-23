@@ -158,6 +158,7 @@ export namespace pragma::filesystem {
 	template<class T>
 	T open_file(const std::string_view &path, FileMode mode, std::string *optOutErr = nullptr, SearchFlags includeFlags = SearchFlags::All, SearchFlags excludeFlags = SearchFlags::None);
 
+	DLLFSYSTEM std::string resolve_home_directory(const std::string_view &sv, bool filePath);
 	DLLFSYSTEM std::string get_program_path();
 	DLLFSYSTEM std::string get_program_write_path();
 	DLLFSYSTEM void add_custom_mount_directory(const std::string_view &cpath, SearchFlags searchMode = SearchFlags::Local);
